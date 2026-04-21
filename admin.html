@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Docente — Tutor IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --verde: #075e54;
+            --verde-claro: #128c7e;
+            --verde-bg: #e8f5e9;
+            --gris-bg: #f5f5f5;
+            --gris-borde: #e0e0e0;
+            --texto: #1a1a1a;
+            --texto-muted: #777;
+            --blanco: #ffffff;
+            --rojo: #e53935;
+            --amarillo: #f9a825;
+            --azul: #1565c0;
+            --sombra: 0 4px 20px rgba(0,0,0,0.07);
+            --sombra-hover: 0 14px 40px rgba(7,94,84,0.16);
+        }
+
+        body { font-family: 'DM Sans', sans-serif; background: var(--gris-bg); color: var(--texto); min-height: 100vh; }
+
+        /* ---- ANIMACIONES ---- */
+        @keyframes fadeUp  { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes popIn   { 0%{opacity:0;transform:scale(0.9);} 70%{transform:scale(1.03);} 100%{opacity:1;transform:scale(1);} }
+        @keyframes barGrow { from { width: 0; } }
+        @keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes spin    { to { transform: rotate(360deg); } }
+        @keyframes pulse   { 0%,100%{box-shadow:0 0 0 0 rgba(7,94,84,0.3);} 50%{box-shadow:0 0 0 8px rgba(7,94,84,0);} }
+        @keyframes toastIn { from{opacity:0;transform:translateY(16px);} to{opacity:1;transform:translateY(0);} }
+        @keyframes toastOut{ to{opacity:0;transform:translateY(16px);} }
+
+        /* ---- SIDEBAR ---- */
+        .layout { display: flex; min-height: 100vh; }
+
+        .sidebar {
+            width: 240px; background: var(--verde);
+            display: flex; flex-direction: column;
+            position: fixed; top:0; left:0; bottom:0; z-index:100;
+            box-shadow: 4px 0 24px rgba(0,0,0,0.12);
+        }
+
+        .sidebar-logo { padding: 28px 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .icon { font-size: 28px; }
+        .sidebar-logo h1 { color:#fff; font-size:16px; font-weight:600; margin-top:6px; line-height:1.3; }
+        .sidebar-logo p  { color:rgba(255,255,255,0.6); font-size:11px; margin-top:2px; }
+
+        .sidebar-nav { flex:1; padding:16px 12px; }
+        .nav-label { font-size:10px; font-weight:600; color:rgba(255,255,255,0.4); letter-spacing:1px; text-transform:uppercase; padding:0 12px; margin:16px 0 6px; }
+
+        .nav-item {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 12px; border-radius:8px;
+            color:rgba(255,255,255,0.75); font-size:14px;
+            cursor:pointer; border:none; background:none;
+            width:100%; text-align:left;
+            transition: background 0.2s, color 0.2s, transform 0.2s;
+        }
+        .nav-item:hover { background:rgba(255,255,255,0.12); color:#fff; transform:translateX(4px); }
+        .nav-item:active { transform:translateX(4px) scale(0.98); }
+        .nav-item.active { background:rgba(255,255,255,0.18); color:#fff; font-weight:600; }
+        .nav-item .icon { font-size:16px; width:20px; text-align:center; }
+
+        .sidebar-footer { padding:16px 12px; border-top:1px solid rgba(255,255,255,0.1); }
+        .btn-logout {
+            display:flex; align-items:center; gap:8px;
+            padding:10px 12px; border-radius:8px;
+            color:rgba(255,255,255,0.6); font-size:13px;
+            cursor:pointer; background:none; border:none; width:100%;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { color:#fff; background:rgba(255,255,255,0.1); transform:translateX(4px); }
+
+        /* ---- MAIN ---- */
+        .main { margin-left:240px; flex:1; }
+
+        .topbar {
+            background:var(--blanco); border-bottom:1px solid var(--gris-borde);
+            padding:16px 32px; display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:50;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .topbar h2 { font-size:18px; font-weight:600; }
+        .topbar-right { display:flex; align-items:center; gap:12px; }
+        .badge-docente {
+            background:var(--verde-bg); color:var(--verde);
+            font-size:12px; font-weight:600; padding:4px 12px; border-radius:20px;
+            animation: pulse 2.5s ease-in-out infinite;
+        }
+
+        .content { padding:28px 32px; }
+
+        /* ---- VISTAS ---- */
+        .vista { display:none; }
+        .vista.active { display:block; }
+
+        /* ---- STAT CARDS ---- */
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:16px; margin-bottom:28px; }
+
+        .stat-card {
+            background:var(--blanco); border:1px solid var(--gris-borde);
+            border-radius:14px; padding:20px;
+            box-shadow:var(--sombra);
+            transition: transform 0.28s cubic-bezier(.22,1,.36,1), box-shadow 0.28s, border-color 0.2s;
+            cursor:default;
+            animation: fadeUp 0.5s cubic-bezier(.22,1,.36,1) both;
+        }
+        .stat-card:nth-child(1){animation-delay:.05s} .stat-card:nth-child(2){animation-delay:.10s}
+        .stat-card:nth-child(3){animation-delay:.15s} .stat-card:nth-child(4){animation-delay:.20s}
+        .stat-card:hover { transform:translateY(-7px) scale(1.02); box-shadow:var(--sombra-hover); border-color:var(--verde-claro); }
+        .stat-card .lbl { font-size:12px; color:var(--texto-muted); font-weight:500; }
+        .stat-card .val { font-size:32px; font-weight:600; margin-top:4px; line-height:1; }
+        .stat-card .sub { font-size:12px; color:var(--texto-muted); margin-top:4px; }
+        .stat-card.verde .val  { color:var(--verde); }
+        .stat-card.azul .val   { color:var(--azul); }
+        .stat-card.rojo .val   { color:var(--rojo); }
+        .stat-card.amarillo .val { color:var(--amarillo); }
+
+        /* ---- GRID Y CARDS ---- */
+        .seccion-titulo { font-size:15px; font-weight:600; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:28px; }
+        @media(max-width:900px){ .grid-2{grid-template-columns:1fr;} }
+
+        .card {
+            background:var(--blanco); border:1px solid var(--gris-borde);
+            border-radius:14px; padding:20px;
+            box-shadow:var(--sombra);
+            transition: transform 0.28s cubic-bezier(.22,1,.36,1), box-shadow 0.28s;
+            animation: fadeUp 0.5s cubic-bezier(.22,1,.36,1) both;
+        }
+        .card:hover { transform:translateY(-5px); box-shadow:0 18px 44px rgba(0,0,0,0.09); }
+
+        /* ---- TABLA ---- */
+        .tabla-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:14px; }
+        thead th {
+            text-align:left; padding:10px 14px;
+            font-size:11px; font-weight:600; color:var(--texto-muted);
+            text-transform:uppercase; letter-spacing:0.5px;
+            border-bottom:1px solid var(--gris-borde); background:var(--gris-bg);
+        }
+        tbody td { padding:12px 14px; border-bottom:1px solid var(--gris-borde); vertical-align:middle; }
+        tbody tr:last-child td { border-bottom:none; }
+        tbody tr { transition: background 0.15s; }
+        tbody tr:hover { background:#f0faf8; }
+
+        /* ---- BOTONES ---- */
+        .btn-ver {
+            background:var(--verde); color:#fff; border:none; border-radius:7px;
+            padding:6px 14px; font-size:12px; font-weight:600;
+            cursor:pointer; font-family:'DM Sans',sans-serif;
+            transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-ver:hover { background:var(--verde-claro); transform:translateY(-2px); box-shadow:0 4px 14px rgba(7,94,84,0.28); }
+        .btn-ver:active { transform:scale(0.96); }
+
+        .btn-dl {
+            display:inline-flex; align-items:center; gap:6px;
+            background:none; border:1px solid var(--gris-borde);
+            border-radius:7px; padding:7px 13px;
+            font-size:12px; font-weight:500; color:var(--texto);
+            cursor:pointer; font-family:'DM Sans',sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-dl:hover { background:var(--verde-bg); border-color:var(--verde); color:var(--verde); transform:translateY(-2px); box-shadow:0 4px 14px rgba(7,94,84,0.15); }
+        .btn-dl:active { transform:scale(0.96); }
+
+        .btn-dl-grande {
+            display:inline-flex; align-items:center; gap:8px;
+            background:var(--verde); color:#fff; border:none; border-radius:9px;
+            padding:11px 20px; font-size:14px; font-weight:600;
+            cursor:pointer; font-family:'DM Sans',sans-serif;
+            transition: all 0.22s;
+            box-shadow:0 4px 16px rgba(7,94,84,0.22);
+        }
+        .btn-dl-grande:hover { background:var(--verde-claro); transform:translateY(-3px); box-shadow:0 10px 28px rgba(7,94,84,0.28); }
+        .btn-dl-grande:active { transform:scale(0.96); }
+        .btn-dl-grande.azul { background:var(--azul); box-shadow:0 4px 16px rgba(21,101,192,0.22); }
+        .btn-dl-grande.azul:hover { background:#1976d2; box-shadow:0 10px 28px rgba(21,101,192,0.28); }
+
+        .btn-primary {
+            background:var(--verde); color:#fff; border:none; border-radius:8px;
+            padding:9px 18px; font-size:14px; font-weight:600;
+            cursor:pointer; font-family:'DM Sans',sans-serif;
+            transition: all 0.2s; white-space:nowrap;
+        }
+        .btn-primary:hover { background:var(--verde-claro); transform:translateY(-2px); box-shadow:0 4px 16px rgba(7,94,84,0.25); }
+        .btn-primary:active { transform:scale(0.97); }
+
+        /* ---- TAGS ---- */
+        .tag { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; transition:transform 0.15s; }
+        .tag:hover { transform:scale(1.08); }
+        .tag-verde    { background:var(--verde-bg); color:var(--verde); }
+        .tag-gris     { background:#eee; color:#666; }
+        .tag-rojo     { background:#ffebee; color:var(--rojo); }
+        .tag-azul     { background:#e3f2fd; color:var(--azul); }
+        .tag-amarillo { background:#fffde7; color:#f57f17; }
+
+        /* ---- BÚSQUEDA ---- */
+        .barra-top { display:flex; gap:12px; margin-bottom:16px; align-items:center; flex-wrap:wrap; }
+        .barra-top input {
+            flex:1; min-width:200px; padding:9px 14px;
+            border:1px solid var(--gris-borde); border-radius:8px;
+            font-size:14px; font-family:'DM Sans',sans-serif;
+            outline:none; transition: border 0.2s, box-shadow 0.2s;
+        }
+        .barra-top input:focus { border-color:var(--verde); box-shadow:0 0 0 3px rgba(7,94,84,0.1); }
+
+        /* ---- PANEL DESCARGA ---- */
+        .descarga-panel {
+            background:linear-gradient(135deg,#e8f5e9,#f1f8f6);
+            border:1px solid #c8e6c9; border-radius:14px;
+            padding:20px 24px; margin-bottom:24px;
+            animation: fadeUp 0.45s ease both;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .descarga-panel:hover { transform:translateY(-3px); box-shadow:0 10px 32px rgba(7,94,84,0.1); }
+        .descarga-panel h3 { font-size:14px; font-weight:600; color:var(--verde); margin-bottom:4px; }
+        .descarga-panel p  { font-size:12px; color:var(--texto-muted); margin-bottom:14px; }
+        .descarga-btns { display:flex; gap:10px; flex-wrap:wrap; }
+
+        /* ---- DETALLE ALUMNO ---- */
+        .alumno-header { display:flex; align-items:center; gap:16px; }
+        .avatar {
+            width:56px; height:56px; border-radius:50%;
+            background:var(--verde); color:#fff;
+            font-size:20px; font-weight:700;
+            display:flex; align-items:center; justify-content:center; flex-shrink:0;
+            box-shadow:0 4px 16px rgba(7,94,84,0.28);
+            transition: transform 0.25s, box-shadow 0.25s;
+            cursor:default;
+        }
+        .avatar:hover { transform:scale(1.1) rotate(-5deg); box-shadow:0 8px 24px rgba(7,94,84,0.35); }
+        .alumno-info h2 { font-size:20px; font-weight:700; }
+        .alumno-info p  { font-size:13px; color:var(--texto-muted); margin-top:2px; }
+
+        .btn-back {
+            background:none; border:1px solid var(--gris-borde); border-radius:8px;
+            padding:8px 14px; font-size:13px; cursor:pointer;
+            font-family:'DM Sans',sans-serif; color:var(--texto);
+            display:inline-flex; align-items:center; gap:6px;
+            transition: all 0.2s; margin-bottom:20px;
+        }
+        .btn-back:hover { background:var(--gris-bg); transform:translateX(-4px); }
+
+        /* ---- BARRAS PROGRESO ---- */
+        .tema-bar { margin-bottom:12px; }
+        .tema-bar-top { display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }
+        .tema-bar-track { height:8px; background:var(--gris-bg); border-radius:4px; overflow:hidden; }
+        .tema-bar-fill {
+            height:100%; background:linear-gradient(90deg,var(--verde),var(--verde-claro));
+            border-radius:4px; animation:barGrow 0.9s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        /* ---- PREGUNTA ITEM ---- */
+        .pregunta-item {
+            padding:12px 8px; border-bottom:1px solid var(--gris-borde);
+            display:flex; gap:12px; align-items:flex-start;
+            border-radius:6px; transition: background 0.15s, padding-left 0.2s;
+        }
+        .pregunta-item:last-child { border-bottom:none; }
+        .pregunta-item:hover { background:#f8fffe; padding-left:14px; }
+        .pregunta-texto { flex:1; font-size:13px; line-height:1.5; }
+        .pregunta-meta  { font-size:11px; color:var(--texto-muted); white-space:nowrap; }
+
+        /* ---- MODAL ---- */
+        .overlay {
+            display:none; position:fixed; inset:0;
+            background:rgba(0,0,0,0.42); z-index:200;
+            align-items:center; justify-content:center;
+            backdrop-filter:blur(4px);
+        }
+        .overlay.open { display:flex; }
+        .modal {
+            background:var(--blanco); border-radius:16px;
+            padding:32px; width:100%; max-width:420px;
+            box-shadow:0 28px 80px rgba(0,0,0,0.22);
+            animation: popIn 0.35s cubic-bezier(.22,1,.36,1) both;
+        }
+        .modal h3 { font-size:18px; font-weight:700; margin-bottom:20px; }
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-size:12px; font-weight:600; color:var(--texto-muted); margin-bottom:6px; }
+        .form-group input {
+            width:100%; padding:10px 14px;
+            border:1px solid var(--gris-borde); border-radius:8px;
+            font-size:14px; font-family:'DM Sans',sans-serif;
+            outline:none; transition: border 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus { border-color:var(--verde); box-shadow:0 0 0 3px rgba(7,94,84,0.1); }
+        .modal-btns { display:flex; gap:10px; margin-top:20px; }
+        .btn-cancel {
+            flex:1; padding:10px; border:1px solid var(--gris-borde);
+            border-radius:8px; background:none; font-size:14px;
+            cursor:pointer; font-family:'DM Sans',sans-serif; transition:background 0.15s;
+        }
+        .btn-cancel:hover { background:var(--gris-bg); }
+
+        .alert { padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px; display:none; }
+        .alert.ok  { background:var(--verde-bg); color:var(--verde); display:block; }
+        .alert.err { background:#ffebee; color:var(--rojo); display:block; }
+
+        /* ---- MISC ---- */
+        .empty { text-align:center; padding:48px 20px; color:var(--texto-muted); }
+        .empty .icon { font-size:40px; margin-bottom:12px; }
+        .empty p { font-size:14px; }
+        .loading { text-align:center; padding:40px; color:var(--texto-muted); font-size:14px; }
+        .spinner { width:28px; height:28px; border:3px solid var(--gris-borde); border-top-color:var(--verde); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 12px; }
+        .chart-wrap { position:relative; height:220px; }
+
+        /* ---- TOAST ---- */
+        .toast {
+            position:fixed; bottom:28px; right:28px;
+            background:var(--verde); color:#fff;
+            padding:12px 20px; border-radius:10px;
+            font-size:14px; font-weight:500;
+            box-shadow:0 8px 28px rgba(7,94,84,0.32);
+            z-index:999; display:flex; align-items:center; gap:8px;
+            animation: toastIn 0.3s ease both;
+        }
+        .toast.out { animation: toastOut 0.3s ease both; }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <div class="icon">🎓</div>
+            <h1>Panel Docente</h1>
+            <p>Tutor IA — POO</p>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-label">Menú</div>
+            <button class="nav-item active" onclick="mostrarVista('dashboard')"><span class="icon">📊</span> Resumen general</button>
+            <button class="nav-item" onclick="mostrarVista('alumnos')"><span class="icon">👥</span> Alumnos</button>
+            <button class="nav-item" onclick="mostrarVista('preguntas')"><span class="icon">💬</span> Todas las preguntas</button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="cerrarSesion()"><span>🚪</span> Cerrar sesión</button>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <h2 id="topbar-titulo">Resumen general</h2>
+            <div class="topbar-right">
+                <span class="badge-docente">🔐 Acceso docente</span>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- DASHBOARD -->
+            <div id="vista-dashboard" class="vista active">
+                <div class="stats-grid" id="stats-cards">
+                    <div class="loading"><div class="spinner"></div>Cargando...</div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="seccion-titulo">📈 Preguntas por tema</div>
+                        <div class="chart-wrap"><canvas id="chartTemas"></canvas></div>
+                    </div>
+                    <div class="card">
+                        <div class="seccion-titulo">🔥 Temas más consultados</div>
+                        <div id="temas-lista"></div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-bottom:24px">
+                    <div class="seccion-titulo">🕐 Últimas preguntas recibidas</div>
+                    <div class="tabla-wrap">
+                        <table>
+                            <thead><tr><th>Alumno</th><th>Pregunta</th><th>Tema</th><th>Fecha</th></tr></thead>
+                            <tbody id="tbody-recientes"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="descarga-panel">
+                    <h3>📥 Exportar datos de todos los alumnos</h3>
+                    <p>Descarga el historial completo de preguntas para análisis de investigación, o analízalo directamente aquí.</p>
+                    <div class="descarga-btns">
+                        <button class="btn-dl-grande" onclick="descargarTodoCSV()">📊 Descargar CSV completo</button>
+                        <button class="btn-dl-grande azul" onclick="descargarTodoTXT()">📄 Descargar TXT completo</button>
+                        <button class="btn-dl-grande" style="background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 4px 16px rgba(124,58,237,0.35)" onclick="window.location.href='/analisis.html?modo=global'">🔬 Analizar (global)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALUMNOS -->
+            <div id="vista-alumnos" class="vista">
+                <div class="barra-top">
+                    <input type="text" id="buscar-alumno" placeholder="🔍  Buscar por nombre o número de control..." oninput="filtrarAlumnos()">
+                    <button class="btn-primary" onclick="abrirModal()">+ Registrar alumno</button>
+                </div>
+                <div class="card">
+                    <div class="tabla-wrap">
+                        <table>
+                            <thead><tr><th>Alumno</th><th>N° Control</th><th>Grupo</th><th>Preguntas</th><th>Actividad</th><th></th></tr></thead>
+                            <tbody id="tbody-alumnos"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DETALLE ALUMNO -->
+            <div id="vista-detalle" class="vista">
+                <button class="btn-back" onclick="mostrarVista('alumnos')">← Volver a alumnos</button>
+
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px">
+                    <div class="alumno-header">
+                        <div class="avatar" id="detalle-avatar">?</div>
+                        <div class="alumno-info">
+                            <h2 id="detalle-nombre">—</h2>
+                            <p id="detalle-info">—</p>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap" id="detalle-descargas"></div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="seccion-titulo">📚 Temas más consultados</div>
+                        <div id="detalle-temas"></div>
+                    </div>
+                    <div class="card">
+                        <div class="seccion-titulo">📊 Distribución por tema</div>
+                        <div class="chart-wrap"><canvas id="chartAlumno"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="seccion-titulo">💬 Historial de preguntas</div>
+                    <div id="detalle-preguntas"></div>
+                </div>
+            </div>
+
+            <!-- TODAS LAS PREGUNTAS -->
+            <div id="vista-preguntas" class="vista">
+                <div class="card" style="margin-bottom:24px">
+                    <div class="tabla-wrap">
+                        <table>
+                            <thead><tr><th>#</th><th>Alumno</th><th>Pregunta</th><th>Tema</th><th>Fecha</th></tr></thead>
+                            <tbody id="tbody-preguntas"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="descarga-panel">
+                    <h3>📥 Exportar historial completo</h3>
+                    <p>Descarga todas las preguntas de todos los alumnos para análisis de investigación, o analiza directamente aquí.</p>
+                    <div class="descarga-btns">
+                        <button class="btn-dl-grande" onclick="descargarTodoCSV()">📊 CSV completo</button>
+                        <button class="btn-dl-grande azul" onclick="descargarTodoTXT()">📄 TXT completo</button>
+                        <button class="btn-dl-grande" style="background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 4px 16px rgba(124,58,237,0.35)" onclick="window.location.href='/analisis.html?modo=global'">🔬 Analizar (global)</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal-overlay">
+    <div class="modal">
+        <h3>Registrar alumno nuevo</h3>
+        <div class="alert" id="modal-alert"></div>
+        <div class="form-group"><label>Número de control</label><input type="number" id="reg-nc" placeholder="Ej: 22310001"></div>
+        <div class="form-group"><label>Nombre completo</label><input type="text" id="reg-nombre" placeholder="Ej: Daniel Navarro Mendoza"></div>
+        <div class="form-group"><label>Grupo</label><input type="text" id="reg-grupo" placeholder="Ej: ISC-3A"></div>
+        <div class="form-group"><label>Contraseña inicial</label><input type="text" id="reg-pass" placeholder="El alumno puede cambiarla después"></div>
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn-primary" style="flex:1" onclick="registrarAlumno()">Guardar alumno</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let todosAlumnos = [], todasPreguntas = [];
+    let alumnoActual = null, preguntasAlumnoActual = [];
+    let chartTemas = null, chartAlumno = null;
+
+    const COLORES = ['#075e54','#128c7e','#1565c0','#f9a825','#e53935','#7b1fa2','#2e7d32','#ef6c00'];
+
+    const tagClase = t => ({'Clases':'tag-verde','Métodos':'tag-azul','Objetos':'tag-amarillo',
+        'Herencia':'tag-azul','Polimorfismo':'tag-rojo','Encapsulamiento':'tag-verde',
+        'Constructores':'tag-amarillo','Abstracción':'tag-gris'}[t]||'tag-gris');
+
+    function toast(msg) {
+        const t = document.createElement('div');
+        t.className = 'toast'; t.innerHTML = '✓ ' + msg;
+        document.body.appendChild(t);
+        setTimeout(() => { t.classList.add('out'); setTimeout(() => t.remove(), 300); }, 2800);
+    }
+
+    function mostrarVista(v) {
+        document.querySelectorAll('.vista').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+        document.getElementById('vista-'+v).classList.add('active');
+        const titulos = {dashboard:'Resumen general',alumnos:'Alumnos',preguntas:'Todas las preguntas',detalle:'Detalle de alumno'};
+        document.getElementById('topbar-titulo').textContent = titulos[v]||'';
+        const idx = {dashboard:0,alumnos:1,preguntas:2};
+        if(idx[v]!==undefined) document.querySelectorAll('.nav-item')[idx[v]].classList.add('active');
+        // Reanimar cards al cambiar vista
+        document.querySelectorAll('#vista-'+v+' .card, #vista-'+v+' .stat-card').forEach((el,i)=>{
+            el.style.animation='none'; el.offsetHeight;
+            el.style.animation=`fadeUp 0.4s cubic-bezier(.22,1,.36,1) ${i*0.07}s both`;
+        });
+    }
+
+    async function cargarDatos() {
+        await Promise.all([cargarEstadisticas(), cargarAlumnos(), cargarTodasPreguntas()]);
+    }
+
+    async function cargarEstadisticas() {
+        const res = await fetch('/api/estadisticas');
+        const datos = await res.json();
+        const totalP = datos.reduce((a,b)=>a+b.cantidad,0);
+        const ord = [...datos].sort((a,b)=>b.cantidad-a.cantidad);
+
+        document.getElementById('stats-cards').innerHTML = `
+            <div class="stat-card verde"><div class="lbl">Total preguntas</div><div class="val">${totalP}</div><div class="sub">en todas las sesiones</div></div>
+            <div class="stat-card azul"><div class="lbl">Temas cubiertos</div><div class="val">${datos.length}</div><div class="sub">categorías distintas</div></div>
+            <div class="stat-card rojo"><div class="lbl">Tema más difícil</div><div class="val" style="font-size:16px;padding-top:6px">${ord[0]?.tema||'—'}</div><div class="sub">más preguntas recibidas</div></div>
+            <div class="stat-card amarillo"><div class="lbl">Alumnos registrados</div><div class="val" id="val-alumnos">—</div><div class="sub">en el sistema</div></div>`;
+
+        if(chartTemas) chartTemas.destroy();
+        chartTemas = new Chart(document.getElementById('chartTemas'),{
+            type:'bar',
+            data:{ labels:ord.map(d=>d.tema), datasets:[{data:ord.map(d=>d.cantidad),backgroundColor:COLORES.slice(0,ord.length),borderRadius:6,barThickness:32}] },
+            options:{ responsive:true,maintainAspectRatio:false,
+                plugins:{legend:{display:false}},
+                scales:{ y:{beginAtZero:true,ticks:{stepSize:1,font:{size:11}},grid:{color:'#f0f0f0'}}, x:{ticks:{font:{size:11}},grid:{display:false}} },
+                animation:{duration:900,easing:'easeOutQuart'} }
+        });
+
+        const max = ord[0]?.cantidad||1;
+        document.getElementById('temas-lista').innerHTML = ord.slice(0,6).map((d,i)=>`
+            <div class="tema-bar" style="animation:slideIn 0.4s ease ${i*0.08}s both">
+                <div class="tema-bar-top"><span>${d.tema}</span><span style="color:var(--texto-muted)">${d.cantidad} pregunta${d.cantidad!==1?'s':''}</span></div>
+                <div class="tema-bar-track"><div class="tema-bar-fill" style="width:${Math.round(d.cantidad/max*100)}%"></div></div>
+            </div>`).join('');
+    }
+
+    async function cargarAlumnos() {
+        const res = await fetch('/api/alumnos');
+        todosAlumnos = await res.json();
+        const el = document.getElementById('val-alumnos');
+        if(el) el.textContent = todosAlumnos.length;
+        renderTablaAlumnos(todosAlumnos);
+    }
+
+    function renderTablaAlumnos(alumnos) {
+        const tbody = document.getElementById('tbody-alumnos');
+        if(!alumnos.length){ tbody.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="icon">👤</div><p>No hay alumnos registrados aún.</p></div></td></tr>`; return; }
+        tbody.innerHTML = alumnos.map(a=>{
+            const ini = a.nombre.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+            const nivel = a.total_preguntas===0?['tag-gris','Sin actividad']:
+                          a.total_preguntas<5?['tag-amarillo','Poca actividad']:
+                          a.total_preguntas<15?['tag-azul','Activo']:['tag-verde','Muy activo'];
+            return `<tr>
+                <td><div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:34px;height:34px;border-radius:50%;background:var(--verde);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:transform 0.2s,box-shadow 0.2s;cursor:default"
+                        onmouseover="this.style.transform='scale(1.18) rotate(-6deg)';this.style.boxShadow='0 6px 18px rgba(7,94,84,0.35)'"
+                        onmouseout="this.style.transform='';this.style.boxShadow=''">${ini}</div>
+                    <span style="font-weight:500">${a.nombre}</span></div></td>
+                <td style="font-family:'DM Mono',monospace;font-size:13px">${a.numero_control}</td>
+                <td><span class="tag tag-gris">${a.grupo}</span></td>
+                <td style="font-weight:600">${a.total_preguntas}</td>
+                <td><span class="tag ${nivel[0]}">${nivel[1]}</span></td>
+                <td><button class="btn-ver" onclick="verAlumno(${a.numero_control})">Ver detalle →</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function filtrarAlumnos() {
+        const q = document.getElementById('buscar-alumno').value.toLowerCase();
+        renderTablaAlumnos(todosAlumnos.filter(a=>a.nombre.toLowerCase().includes(q)||String(a.numero_control).includes(q)));
+    }
+
+    async function cargarTodasPreguntas() {
+        const res = await fetch('/preguntas');
+        todasPreguntas = await res.json();
+
+        document.getElementById('tbody-recientes').innerHTML = !todasPreguntas.length
+            ? `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin preguntas aún.</td></tr>`
+            : todasPreguntas.slice(0,8).map(p=>`<tr>
+                <td style="font-size:13px;font-weight:500">${p.nombre||'—'}</td>
+                <td style="max-width:360px;font-size:13px">${p.pregunta.length>90?p.pregunta.slice(0,90)+'…':p.pregunta}</td>
+                <td><span class="tag ${tagClase(p.tema)}">${p.tema}</span></td>
+                <td style="font-size:12px;color:var(--texto-muted);white-space:nowrap">${p.fecha}</td></tr>`).join('');
+
+        document.getElementById('tbody-preguntas').innerHTML = !todasPreguntas.length
+            ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--texto-muted)">Sin preguntas registradas.</td></tr>`
+            : todasPreguntas.map((p,i)=>`<tr>
+                <td style="color:var(--texto-muted);font-size:12px">${todasPreguntas.length-i}</td>
+                <td style="font-size:13px;font-weight:500">${p.nombre||'—'}</td>
+                <td style="font-size:13px;max-width:400px">${p.pregunta.length>100?p.pregunta.slice(0,100)+'…':p.pregunta}</td>
+                <td><span class="tag ${tagClase(p.tema)}">${p.tema}</span></td>
+                <td style="font-size:12px;color:var(--texto-muted);white-space:nowrap">${p.fecha}</td></tr>`).join('');
+    }
+
+    async function verAlumno(nc) {
+        mostrarVista('detalle');
+        alumnoActual = todosAlumnos.find(a=>a.numero_control===nc);
+        if(alumnoActual){
+            const ini = alumnoActual.nombre.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+            document.getElementById('detalle-avatar').textContent = ini;
+            document.getElementById('detalle-nombre').textContent = alumnoActual.nombre;
+            document.getElementById('detalle-info').textContent = `N° Control: ${alumnoActual.numero_control} · Grupo: ${alumnoActual.grupo} · ${alumnoActual.total_preguntas} preguntas realizadas`;
+            document.getElementById('detalle-descargas').innerHTML =
+                `<button class="btn-dl" onclick="descargarAlumnoCSV(${nc})">📊 Descargar CSV</button>
+                 <button class="btn-dl" onclick="descargarAlumnoTXT(${nc})">📄 Descargar TXT</button>
+                 <button class="btn-dl" style="border-color:rgba(124,58,237,0.4);color:#a855f7;font-weight:600" onclick="window.location.href='/analisis.html?modo=individual&alumno=${nc}'" onmouseover="this.style.background='rgba(124,58,237,0.1)';this.style.borderColor='#7c3aed'" onmouseout="this.style.background='';this.style.borderColor='rgba(124,58,237,0.4)'">🔬 Analizar alumno</button>`;
+        }
+
+        const res  = await fetch('/api/alumno/'+nc);
+        const data = await res.json();
+        preguntasAlumnoActual = data.preguntas;
+
+        const max = data.temas_dificiles[0]?.veces||1;
+        document.getElementById('detalle-temas').innerHTML = !data.temas_dificiles.length
+            ? '<div class="empty"><p>Sin preguntas registradas aún.</p></div>'
+            : data.temas_dificiles.map((t,i)=>`
+                <div class="tema-bar" style="animation:slideIn 0.4s ease ${i*0.08}s both">
+                    <div class="tema-bar-top"><span>${t.tema}</span><span style="color:var(--texto-muted)">${t.veces} vez${t.veces!==1?'es':''}</span></div>
+                    <div class="tema-bar-track"><div class="tema-bar-fill" style="width:${Math.round(t.veces/max*100)}%"></div></div>
+                </div>`).join('');
+
+        if(chartAlumno) chartAlumno.destroy();
+        if(data.temas_dificiles.length){
+            chartAlumno = new Chart(document.getElementById('chartAlumno'),{
+                type:'doughnut',
+                data:{ labels:data.temas_dificiles.map(t=>t.tema), datasets:[{data:data.temas_dificiles.map(t=>t.veces),backgroundColor:COLORES.slice(0,data.temas_dificiles.length),borderWidth:2,borderColor:'#fff'}] },
+                options:{ responsive:true,maintainAspectRatio:false,
+                    plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}},
+                    cutout:'60%', animation:{animateRotate:true,duration:900} }
+            });
+        }
+
+        document.getElementById('detalle-preguntas').innerHTML = !data.preguntas.length
+            ? '<div class="empty"><div class="icon">💬</div><p>Este alumno aún no ha realizado preguntas.</p></div>'
+            : data.preguntas.map(p=>`
+                <div class="pregunta-item">
+                    <span class="tag ${tagClase(p.tema)}" style="flex-shrink:0;margin-top:2px">${p.tema}</span>
+                    <span class="pregunta-texto">${p.pregunta}</span>
+                    <span class="pregunta-meta">${p.fecha}</span>
+                </div>`).join('');
+    }
+
+    /* ======= DESCARGAS ======= */
+    function esc(s){ if(!s&&s!==0) return ''; const x=String(s); return (x.includes(',')||x.includes('"')||x.includes('\n'))?'"'+x.replace(/"/g,'""')+'"':x; }
+    function fechaHoy(){ return new Date().toISOString().slice(0,10); }
+
+    function triggerDownload(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href=url; a.download=filename; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function descargarAlumnoCSV(nc) {
+        const a = alumnoActual;
+        const enc = '\uFEFF';
+        const cab = 'numero_control,nombre,grupo,pregunta,tema,fecha\n';
+        const rows = preguntasAlumnoActual.map(p=>[esc(nc),esc(a?.nombre||''),esc(a?.grupo||''),esc(p.pregunta),esc(p.tema),esc(p.fecha)].join(',')).join('\n');
+        triggerDownload(enc+cab+rows, `alumno_${nc}_preguntas.csv`, 'text/csv;charset=utf-8;');
+        toast('CSV del alumno descargado');
+    }
+
+    function descargarAlumnoTXT(nc) {
+        const a = alumnoActual;
+        const L = '─'.repeat(60);
+        let t = `TUTOR IA — HISTORIAL DE PREGUNTAS\nExportado: ${new Date().toLocaleString('es-MX')}\n\n`;
+        t += `ALUMNO: ${a?.nombre||nc}\nN° Control: ${nc} | Grupo: ${a?.grupo||'—'}\nTotal preguntas: ${preguntasAlumnoActual.length}\n${L}\n\n`;
+        preguntasAlumnoActual.forEach((p,i)=>{ t+=`[${i+1}] ${p.fecha}\nTema: ${p.tema}\nPregunta: ${p.pregunta}\n\n`; });
+        triggerDownload(t, `alumno_${nc}_preguntas.txt`, 'text/plain;charset=utf-8;');
+        toast('TXT del alumno descargado');
+    }
+
+    function descargarTodoCSV() {
+        const enc = '\uFEFF';
+        const cab = 'numero_control,nombre,grupo,pregunta,tema,fecha\n';
+        const rows = todasPreguntas.map(p=>{
+            const a = todosAlumnos.find(x=>x.numero_control===p.alumno_id);
+            return [esc(p.alumno_id||''),esc(a?.nombre||'Sin registrar'),esc(a?.grupo||'—'),esc(p.pregunta),esc(p.tema),esc(p.fecha)].join(',');
+        }).join('\n');
+        triggerDownload(enc+cab+rows, `tutor_ia_historial_${fechaHoy()}.csv`, 'text/csv;charset=utf-8;');
+        toast('CSV completo descargado');
+    }
+
+    function descargarTodoTXT() {
+        const L1='═'.repeat(60), L2='─'.repeat(60);
+        let t = `TUTOR IA — HISTORIAL COMPLETO DE INTERACCIONES\nTecnológico Superior de Jalisco — Campus Chapala\nExportado: ${new Date().toLocaleString('es-MX')}\nTotal de registros: ${todasPreguntas.length}\n${L1}\n\n`;
+        const porAlumno = {};
+        todasPreguntas.forEach(p=>{ const k=p.alumno_id||'sin_id'; if(!porAlumno[k]) porAlumno[k]=[]; porAlumno[k].push(p); });
+        Object.entries(porAlumno).forEach(([nc,pregs])=>{
+            const a = todosAlumnos.find(x=>x.numero_control===Number(nc));
+            t += `ALUMNO: ${a?.nombre||'Sin registrar'}\nN° Control: ${nc} | Grupo: ${a?.grupo||'—'}\nPreguntas: ${pregs.length}\n${L2}\n`;
+            pregs.forEach((p,i)=>{ t+=`  [${i+1}] ${p.fecha} | Tema: ${p.tema}\n       ${p.pregunta}\n\n`; });
+            t += '\n';
+        });
+        triggerDownload(t, `tutor_ia_historial_${fechaHoy()}.txt`, 'text/plain;charset=utf-8;');
+        toast('TXT completo descargado');
+    }
+
+    /* ======= MODAL ======= */
+    function abrirModal() {
+        document.getElementById('modal-overlay').classList.add('open');
+        document.getElementById('modal-alert').className='alert';
+        ['reg-nc','reg-nombre','reg-grupo','reg-pass'].forEach(id=>document.getElementById(id).value='');
+    }
+    function cerrarModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+    async function registrarAlumno() {
+        const nc=document.getElementById('reg-nc').value.trim(), nombre=document.getElementById('reg-nombre').value.trim();
+        const grupo=document.getElementById('reg-grupo').value.trim(), pass=document.getElementById('reg-pass').value.trim();
+        const al=document.getElementById('modal-alert');
+        if(!nc||!nombre||!grupo||!pass){ al.textContent='Completa todos los campos.'; al.className='alert err'; return; }
+        const res=await fetch('/api/registrar-alumno',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({numero_control:parseInt(nc),nombre,grupo,contrasena:pass})});
+        const data=await res.json();
+        if(data.ok){
+            al.textContent='✓ Alumno registrado correctamente.'; al.className='alert ok';
+            await cargarAlumnos(); toast(nombre+' registrado correctamente');
+            setTimeout(cerrarModal,1500);
+        } else { al.textContent=data.error||'Error al registrar.'; al.className='alert err'; }
+    }
+
+    function cerrarSesion() { window.location.href='/logout'; }
+    document.getElementById('modal-overlay').addEventListener('click',function(e){ if(e.target===this) cerrarModal(); });
+
+    cargarDatos();
+</script>
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Historial — Tutor IA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --verde:       #064e45;
+            --verde-mid:   #0a7566;
+            --verde-vivo:  #10b89a;
+            --verde-glow:  rgba(16,184,154,0.14);
+            --fondo:       #0d1117;
+            --fondo-2:     #161b22;
+            --fondo-3:     #1c2330;
+            --borde:       rgba(255,255,255,0.07);
+            --borde-hover: rgba(16,184,154,0.35);
+            --texto:       #e6edf3;
+            --texto-2:     #8b949e;
+            --texto-3:     #484f58;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--fondo);
+            color: var(--texto);
+            min-height: 100vh;
+        }
+
+        @keyframes fadeUp  { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideIn { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes glow    { 0%,100%{box-shadow:0 0 20px rgba(16,184,154,0.2)} 50%{box-shadow:0 0 40px rgba(16,184,154,0.4)} }
+        @keyframes barGrow { from{width:0} }
+        @keyframes spin    { to{transform:rotate(360deg)} }
+
+        /* ---- TOPBAR ---- */
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 13px 28px;
+            background: var(--fondo-2);
+            border-bottom: 1px solid var(--borde);
+            position: sticky; top: 0; z-index: 50;
+            animation: fadeUp 0.4s ease both;
+        }
+
+        .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+        .ai-avatar {
+            width: 38px; height: 38px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--verde), var(--verde-vivo));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; animation: glow 3s ease-in-out infinite;
+        }
+
+        .topbar h1 { font-size: 15px; font-weight: 700; }
+        .topbar p  { font-size: 11px; color: var(--texto-2); margin-top: 1px; }
+
+        .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+        .btn-volver {
+            display: flex; align-items: center; gap: 7px;
+            background: none; border: 1px solid var(--borde);
+            border-radius: 9px; padding: 8px 14px;
+            color: var(--texto-2); font-size: 13px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer; text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-volver:hover {
+            border-color: var(--verde-vivo);
+            color: var(--verde-vivo);
+            background: var(--verde-glow);
+            transform: translateX(-2px);
+        }
+
+        /* ---- CONTENT ---- */
+        .content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 24px;
+        }
+
+        /* ---- PERFIL ---- */
+        .perfil-card {
+            background: var(--fondo-2);
+            border: 1px solid var(--borde);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+            animation: fadeUp 0.45s ease both;
+            transition: border-color 0.2s;
+        }
+        .perfil-card:hover { border-color: var(--borde-hover); }
+
+        .perfil-avatar {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--verde-mid), var(--verde-vivo));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; font-weight: 700; color: #fff;
+            flex-shrink: 0;
+            animation: glow 3s ease-in-out infinite;
+            transition: transform 0.25s;
+        }
+        .perfil-avatar:hover { transform: scale(1.08) rotate(-5deg); }
+
+        .perfil-info { flex: 1; }
+        .perfil-info h2 { font-size: 20px; font-weight: 700; }
+        .perfil-info p  { font-size: 13px; color: var(--texto-2); margin-top: 3px; }
+
+        .perfil-stats {
+            display: flex; gap: 20px;
+        }
+
+        .pstat {
+            text-align: center;
+            background: var(--fondo-3);
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            padding: 12px 20px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .pstat:hover { transform: translateY(-3px); border-color: var(--verde-vivo); }
+        .pstat .val { font-size: 28px; font-weight: 700; color: var(--verde-vivo); font-family: 'JetBrains Mono', monospace; }
+        .pstat .lbl { font-size: 11px; color: var(--texto-2); margin-top: 2px; }
+
+        /* ---- GRID ---- */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        @media(max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        /* ---- CARDS ---- */
+        .card {
+            background: var(--fondo-2);
+            border: 1px solid var(--borde);
+            border-radius: 16px; padding: 20px;
+            animation: fadeUp 0.5s ease both;
+            transition: border-color 0.2s, transform 0.25s;
+        }
+        .card:hover { border-color: var(--borde-hover); transform: translateY(-3px); }
+
+        .card-titulo {
+            font-size: 14px; font-weight: 600;
+            color: var(--texto); margin-bottom: 16px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ---- BARRAS ---- */
+        .tema-bar { margin-bottom: 14px; }
+        .tema-bar-top {
+            display: flex; justify-content: space-between;
+            font-size: 13px; margin-bottom: 6px;
+        }
+        .tema-bar-top .nombre { color: var(--texto); font-weight: 500; }
+        .tema-bar-top .veces  { color: var(--texto-2); font-size: 12px; }
+        .tema-bar-track {
+            height: 6px; background: var(--fondo-3);
+            border-radius: 3px; overflow: hidden;
+        }
+        .tema-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--verde-mid), var(--verde-vivo));
+            border-radius: 3px;
+            animation: barGrow 0.9s cubic-bezier(.22,1,.36,1) both;
+        }
+
+        /* ---- GRÁFICA ---- */
+        .chart-wrap { position: relative; height: 200px; }
+
+        /* ---- HISTORIAL ---- */
+        .historial-wrap { margin-bottom: 24px; }
+
+        .filtros {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+        }
+
+        .filtro-btn {
+            background: var(--fondo-3); border: 1px solid var(--borde);
+            border-radius: 20px; padding: 5px 14px;
+            font-size: 12px; color: var(--texto-2);
+            cursor: pointer; font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .filtro-btn:hover { border-color: var(--verde-vivo); color: var(--verde-vivo); }
+        .filtro-btn.activo {
+            background: var(--verde-glow);
+            border-color: var(--verde-vivo);
+            color: var(--verde-vivo);
+            font-weight: 600;
+        }
+
+        .pregunta-item {
+            display: flex; gap: 12px; align-items: flex-start;
+            padding: 13px 16px;
+            background: var(--fondo-3);
+            border: 1px solid var(--borde);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            animation: slideIn 0.35s ease both;
+        }
+        .pregunta-item:hover {
+            border-color: var(--borde-hover);
+            transform: translateX(4px);
+            background: rgba(16,184,154,0.05);
+        }
+
+        .pregunta-num {
+            font-size: 11px; color: var(--texto-3);
+            font-family: 'JetBrains Mono', monospace;
+            flex-shrink: 0; margin-top: 2px;
+            min-width: 24px;
+        }
+
+        .pregunta-cuerpo { flex: 1; }
+        .pregunta-texto  { font-size: 13px; color: var(--texto); line-height: 1.5; }
+        .pregunta-meta   { font-size: 11px; color: var(--texto-3); margin-top: 5px; }
+
+        /* ---- TAGS ---- */
+        .tag {
+            display: inline-block; padding: 3px 10px;
+            border-radius: 20px; font-size: 11px; font-weight: 600;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .tag-verde    { background: rgba(16,184,154,0.15); color: var(--verde-vivo); }
+        .tag-azul     { background: rgba(21,101,192,0.2);  color: #64b5f6; }
+        .tag-amarillo { background: rgba(249,168,37,0.15); color: #ffd54f; }
+        .tag-rojo     { background: rgba(229,83,75,0.15);  color: #ef9a9a; }
+        .tag-gris     { background: rgba(255,255,255,0.07); color: var(--texto-2); }
+
+        /* ---- EMPTY ---- */
+        .empty {
+            text-align: center; padding: 48px 20px;
+            color: var(--texto-2);
+        }
+        .empty .icon { font-size: 40px; margin-bottom: 12px; }
+        .empty p { font-size: 14px; }
+
+        /* ---- LOADING ---- */
+        .loading {
+            text-align: center; padding: 60px;
+            color: var(--texto-2);
+        }
+        .spinner {
+            width: 32px; height: 32px;
+            border: 3px solid var(--borde);
+            border-top-color: var(--verde-vivo);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 14px;
+        }
+
+        /* ---- SESIONES ---- */
+        .sesion-grupo { margin-bottom: 24px; }
+        .sesion-fecha {
+            font-size: 12px; font-weight: 600;
+            color: var(--verde-vivo);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .sesion-fecha::after {
+            content: ''; flex: 1; height: 1px;
+            background: var(--borde);
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+    <div class="topbar-left">
+        <div class="ai-avatar">🎓</div>
+        <div>
+            <h1>Mi historial</h1>
+            <p>Tutor IA — POO</p>
+        </div>
+    </div>
+    <div class="topbar-right">
+        <a href="/" class="btn-volver">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Volver al chat
+        </a>
+    </div>
+</header>
+
+<!-- CONTENT -->
+<div class="content">
+
+    <div id="main-content">
+        <div class="loading">
+            <div class="spinner"></div>
+            Cargando tu historial...
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const tagClase = t => ({
+        'Clases':'tag-verde', 'Métodos':'tag-azul', 'Objetos':'tag-amarillo',
+        'Herencia':'tag-azul', 'Polimorfismo':'tag-rojo', 'Encapsulamiento':'tag-verde',
+        'Constructores':'tag-amarillo', 'Abstracción':'tag-gris'
+    }[t] || 'tag-gris');
+
+    let todasPreguntas = [];
+    let chartDona = null;
+    const COLORES = ['#10b89a','#64b5f6','#ffd54f','#ef9a9a','#ce93d8','#80cbc4','#ffcc80','#a5d6a7'];
+
+    function agruparPorFecha(preguntas) {
+        const grupos = {};
+        preguntas.forEach(p => {
+            const dia = p.fecha.split(' ')[0];
+            if (!grupos[dia]) grupos[dia] = [];
+            grupos[dia].push(p);
+        });
+        return grupos;
+    }
+
+    function formatearFecha(str) {
+        const [y, m, d] = str.split('-');
+        const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+        return `${d} de ${meses[parseInt(m)-1]} de ${y}`;
+    }
+
+    function renderFiltros(temas) {
+        const todos = ['Todos', ...temas.map(t => t.tema)];
+        return `<div class="filtros" id="filtros">
+            ${todos.map((t, i) => `
+                <button class="filtro-btn ${i===0?'activo':''}" onclick="filtrar('${t}', this)">
+                    ${t === 'Todos' ? `Todos (${todasPreguntas.length})` : t}
+                </button>`).join('')}
+        </div>`;
+    }
+
+    function renderPreguntas(preguntas) {
+        if (!preguntas.length) {
+            return `<div class="empty"><div class="icon">💬</div><p>No hay preguntas en esta categoría.</p></div>`;
+        }
+
+        const grupos = agruparPorFecha(preguntas);
+        let html = '';
+        let contador = preguntas.length;
+
+        Object.entries(grupos).forEach(([dia, items]) => {
+            html += `<div class="sesion-grupo">
+                <div class="sesion-fecha">${formatearFecha(dia)} · ${items.length} pregunta${items.length!==1?'s':''}</div>`;
+            items.forEach(p => {
+                html += `<div class="pregunta-item">
+                    <span class="pregunta-num">#${contador--}</span>
+                    <div class="pregunta-cuerpo">
+                        <div class="pregunta-texto">${p.pregunta}</div>
+                        <div class="pregunta-meta">${p.fecha.split(' ')[1].slice(0,5)} hrs</div>
+                    </div>
+                    <span class="tag ${tagClase(p.tema)}">${p.tema}</span>
+                </div>`;
+            });
+            html += `</div>`;
+        });
+
+        return html;
+    }
+
+    function filtrar(tema, btn) {
+        document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('activo'));
+        btn.classList.add('activo');
+        const filtradas = tema === 'Todos' ? todasPreguntas : todasPreguntas.filter(p => p.tema === tema);
+        document.getElementById('lista-preguntas').innerHTML = renderPreguntas(filtradas);
+    }
+
+    async function cargarHistorial() {
+        try {
+            const res  = await fetch('/api/mi-historial');
+            if (res.status === 401) { window.location.href = '/login.html'; return; }
+            const data = await res.json();
+
+            todasPreguntas = data.preguntas;
+            const alumno   = data.alumno;
+            const temas    = data.temas;
+            const iniciales = alumno.nombre.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+
+            // Calcular días únicos
+            const dias = new Set(data.preguntas.map(p => p.fecha.split(' ')[0]));
+
+            // Renderizar todo
+            document.getElementById('main-content').innerHTML = `
+
+                <!-- PERFIL -->
+                <div class="perfil-card">
+                    <div class="perfil-avatar">${iniciales}</div>
+                    <div class="perfil-info">
+                        <h2>${alumno.nombre}</h2>
+                        <p>Grupo: ${alumno.grupo} · N° Control: ${alumno.numero_control}</p>
+                    </div>
+                    <div class="perfil-stats">
+                        <div class="pstat">
+                            <div class="val">${data.preguntas.length}</div>
+                            <div class="lbl">Preguntas</div>
+                        </div>
+                        <div class="pstat">
+                            <div class="val">${temas.length}</div>
+                            <div class="lbl">Temas</div>
+                        </div>
+                        <div class="pstat">
+                            <div class="val">${dias.size}</div>
+                            <div class="lbl">Sesiones</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS GRID -->
+                <div class="grid-2">
+                    <div class="card" style="animation-delay:0.1s">
+                        <div class="card-titulo">📚 Temas que más consulté</div>
+                        ${temas.length === 0
+                            ? '<div class="empty" style="padding:20px"><p>Sin preguntas aún.</p></div>'
+                            : temas.map((t, i) => `
+                                <div class="tema-bar" style="animation-delay:${i*0.07}s">
+                                    <div class="tema-bar-top">
+                                        <span class="nombre">${t.tema}</span>
+                                        <span class="veces">${t.veces} vez${t.veces!==1?'es':''}</span>
+                                    </div>
+                                    <div class="tema-bar-track">
+                                        <div class="tema-bar-fill" style="width:${Math.round(t.veces/(temas[0]?.veces||1)*100)}%"></div>
+                                    </div>
+                                </div>`).join('')
+                        }
+                    </div>
+
+                    <div class="card" style="animation-delay:0.15s">
+                        <div class="card-titulo">📊 Distribución por tema</div>
+                        ${temas.length === 0
+                            ? '<div class="empty" style="padding:20px"><p>Sin datos aún.</p></div>'
+                            : '<div class="chart-wrap"><canvas id="chartDona"></canvas></div>'
+                        }
+                    </div>
+                </div>
+
+                <!-- HISTORIAL -->
+                <div class="card historial-wrap" style="animation-delay:0.2s">
+                    <div class="card-titulo">🕐 Mis preguntas</div>
+                    ${renderFiltros(temas)}
+                    <div id="lista-preguntas">
+                        ${data.preguntas.length === 0
+                            ? '<div class="empty"><div class="icon">💬</div><p>Aún no has hecho ninguna pregunta.<br>¡Ve al chat y empieza a aprender!</p></div>'
+                            : renderPreguntas(data.preguntas)
+                        }
+                    </div>
+                </div>
+            `;
+
+            // Gráfica dona
+            if (temas.length > 0) {
+                chartDona = new Chart(document.getElementById('chartDona'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: temas.map(t => t.tema),
+                        datasets: [{
+                            data: temas.map(t => t.veces),
+                            backgroundColor: COLORES.slice(0, temas.length),
+                            borderWidth: 2,
+                            borderColor: '#161b22'
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#8b949e',
+                                    font: { size: 11 },
+                                    padding: 12
+                                }
+                            }
+                        },
+                        cutout: '62%',
+                        animation: { animateRotate: true, duration: 900 }
+                    }
+                });
+            }
+
+        } catch(e) {
+            document.getElementById('main-content').innerHTML =
+                `<div class="empty"><div class="icon">⚠️</div><p>Error cargando el historial.</p></div>`;
+        }
+    }
+
+    cargarHistorial();
+</script>
+</body>
+</html>

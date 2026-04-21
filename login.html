@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tutor IA — Ingreso</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+        body, html {
+            width: 100%; height: 100%; overflow: hidden;
+            background-color: #0d1117; /* Fondo oscuro base */
+            color: #ffffff;
+        }
+
+        /* Contenedor del fondo animado */
+        #canvas-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+        }
+
+        /* Capa superior donde va el formulario */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+
+        /* Navbar opcional estilo React Bits */
+        .glass-navbar {
+            position: absolute; top: 20px;
+            width: 90%; max-width: 1000px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+        }
+        .nav-logo { font-weight: 800; font-size: 1.1rem; }
+        .nav-links { font-size: 0.9rem; color: #a3a3a3; }
+
+        /* Tarjeta principal (Glassmorphism) */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            width: 90%; max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-header { text-align: center; margin-bottom: 25px; }
+        .logo-header h1 {
+            font-size: 24px; font-weight: 800; margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #a3a3a3);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo-header p { font-size: 13px; color: #888; }
+
+        /* Pestañas */
+        .tabs { display: flex; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 24px; }
+        .tab {
+            flex: 1; text-align: center; padding: 10px 0;
+            font-size: 13px; color: #888; cursor: pointer;
+            transition: all 0.3s ease; border-bottom: 2px solid transparent;
+        }
+        .tab.active { color: #fff; font-weight: 600; border-bottom: 2px solid #13b910; }
+
+        /* Formularios */
+        .form-panel { display: none; flex-direction: column; animation: fadeIn 0.4s ease; }
+        .form-panel.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        label {
+            font-size: 11px; color: #a3a3a3; margin-bottom: 6px;
+            font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white; padding: 12px 14px; border-radius: 10px;
+            font-size: 14px; margin-bottom: 16px; outline: none; transition: all 0.3s ease;
+        }
+        input:focus { border-color: #13b910; box-shadow: 0 0 10px rgba(19, 185, 16, 0.2); }
+        input::placeholder { color: #555; }
+
+        .btn-primary {
+            background: #ffffff; color: #000000; border: none; border-radius: 12px;
+            padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; margin-top: 5px;
+        }
+        .btn-primary:hover { background: #e2e2e2; transform: translateY(-2px); }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05); color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
+            padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; margin-top: 5px;
+        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+        .alerta {
+            border-radius: 8px; padding: 10px 14px; font-size: 13px;
+            margin-bottom: 16px; text-align: center; font-weight: 600; display: none;
+        }
+        .alerta.error { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); display: block; }
+        .alerta.ok { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); display: block; }
+
+        .footer { text-align: center; margin-top: 20px; font-size: 11px; color: #555; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-layer">
+        
+        <nav class="glass-navbar">
+            <div class="nav-logo">🎓 Tutor IA</div>
+            <div class="nav-links">Tecnológico Superior de Jalisco</div>
+        </nav>
+
+        <div class="glass-card">
+            <div class="logo-header">
+                <h1>Ingreso a POO</h1>
+                <p>Bienvenido a tu entorno de aprendizaje</p>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('alumno')">Alumno</div>
+                <div class="tab" onclick="switchTab('registro')">Registro</div>
+                <div class="tab" onclick="switchTab('admin')">Docente</div>
+            </div>
+
+            <div id="panel-alumno" class="form-panel active">
+                <div class="alerta" id="error-alumno"></div>
+                <label>Número de control</label>
+                <input type="number" id="numero_control" placeholder="Ej: 22310001">
+                <label>Contraseña</label>
+                <input type="password" id="contrasena_alumno" placeholder="Tu contraseña">
+                <button class="btn-primary" onclick="loginAlumno()">Empezar</button>
+            </div>
+
+            <div id="panel-registro" class="form-panel">
+                <div class="alerta" id="error-registro"></div>
+                <label>Número de control</label>
+                <input type="number" id="reg-nc" placeholder="Ej: 22310001">
+                <label>Nombre completo</label>
+                <input type="text" id="reg-nombre" placeholder="Ej: Juan Pérez">
+                <label>Grupo</label>
+                <input type="text" id="reg-grupo" placeholder="Ej: ISC-3A">
+                <label>Contraseña</label>
+                <input type="password" id="reg-pass" placeholder="Mínimo 4 caracteres">
+                <label>Confirmar contraseña</label>
+                <input type="password" id="reg-pass2" placeholder="Repite tu contraseña">
+                <button class="btn-primary" onclick="registrarme()">Crear mi cuenta</button>
+            </div>
+
+            <div id="panel-admin" class="form-panel">
+                <div class="alerta" id="error-admin"></div>
+                <label>Contraseña de docente</label>
+                <input type="password" id="contrasena_admin" placeholder="Contraseña del administrador">
+                <button class="btn-secondary" onclick="loginAdmin()">Entrar al panel</button>
+            </div>
+
+            <div class="footer">Ingeniería en Sistemas Computacionales · 2026</div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            const idx = { alumno: 0, registro: 1, admin: 2 };
+            document.querySelectorAll('.tab')[idx[tab]].classList.add('active');
+            document.getElementById(`panel-${tab}`).classList.add('active');
+        }
+
+        function mostrarAlerta(div, msg, tipo) {
+            div.textContent = msg; div.className = 'alerta ' + tipo;
+            if (tipo === 'error') setTimeout(() => div.className = 'alerta', 4000);
+        }
+
+        async function loginAlumno() {
+            const numero_control = document.getElementById('numero_control').value.trim();
+            const contrasena = document.getElementById('contrasena_alumno').value.trim();
+            const alerta = document.getElementById('error-alumno');
+            if (!numero_control || !contrasena) return mostrarAlerta(alerta, 'Completa todos los campos.', 'error');
+            
+            try {
+                const res = await fetch('/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero_control, contrasena })
+                });
+                const data = await res.json();
+                if (data.ok) window.location.href = '/';
+                else mostrarAlerta(alerta, data.error || 'Credenciales incorrectas.', 'error');
+            } catch (e) { mostrarAlerta(alerta, 'Error de conexión.', 'error'); }
+        }
+
+        async function registrarme() {
+            const nc = document.getElementById('reg-nc').value.trim();
+            const nombre = document.getElementById('reg-nombre').value.trim();
+            const grupo = document.getElementById('reg-grupo').value.trim();
+            const pass = document.getElementById('reg-pass').value.trim();
+            const pass2 = document.getElementById('reg-pass2').value.trim();
+            const alerta = document.getElementById('error-registro');
+
+            if (!nc || !nombre || !grupo || !pass || !pass2) return mostrarAlerta(alerta, 'Completa todos los campos.', 'error');
+            if (pass !== pass2) return mostrarAlerta(alerta, 'Las contraseñas no coinciden.', 'error');
+            if (pass.length < 4) return mostrarAlerta(alerta, 'Mínimo 4 caracteres.', 'error');
+
+            try {
+                const res = await fetch('/registro', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ numero_control: parseInt(nc), nombre, grupo, contrasena: pass })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    mostrarAlerta(alerta, '✓ Cuenta creada. Entrando...', 'ok');
+                    setTimeout(() => window.location.href = '/', 1200);
+                } else mostrarAlerta(alerta, data.error || 'No se pudo registrar.', 'error');
+            } catch (e) { mostrarAlerta(alerta, 'Error de conexión.', 'error'); }
+        }
+
+        async function loginAdmin() {
+            const contrasena = document.getElementById('contrasena_admin').value.trim();
+            const alerta = document.getElementById('error-admin');
+            if (!contrasena) return mostrarAlerta(alerta, 'Ingresa la contraseña.', 'error');
+
+            try {
+                const res = await fetch('/login-admin', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contrasena })
+                });
+                const data = await res.json();
+                if (data.ok) window.location.href = '/admin';
+                else mostrarAlerta(alerta, 'Contraseña incorrecta.', 'error');
+            } catch (e) { mostrarAlerta(alerta, 'Error de conexión.', 'error'); }
+        }
+
+        document.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                const panel = document.querySelector('.form-panel.active').id;
+                if (panel === 'panel-alumno') loginAlumno();
+                else if (panel === 'panel-registro') registrarme();
+                else loginAdmin();
+            }
+        });
+    </script>
+
+    <script>
+        const vertexShader = `
+        precision highp float;
+        void main() { gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+        `;
+
+        const fragmentShader = `
+        precision highp float;
+        uniform float iTime;
+        uniform vec3  iResolution;
+        uniform float animationSpeed;
+        uniform vec2 iMouse;
+        uniform float bendInfluence;
+
+        // Colores base de la imagen (Azul oscuro, Verde Neón, Morado)
+        const vec3 COLOR1 = vec3(11.0, 23.0, 123.0) / 255.0;  // #0b177b
+        const vec3 COLOR2 = vec3(19.0, 185.0, 16.0) / 255.0;  // #13b910
+        const vec3 COLOR3 = vec3(138.0, 85.0, 229.0) / 255.0; // #8a55e5
+        const vec3 BLACK = vec3(0.0);
+
+        mat2 rotate(float r) { return mat2(cos(r), sin(r), -sin(r), cos(r)); }
+
+        vec3 getLineColor(float t) {
+            vec3 color = mix(COLOR1, COLOR2, smoothstep(0.0, 0.5, t));
+            color = mix(color, COLOR3, smoothstep(0.5, 1.0, t));
+            return color * 0.8;
+        }
+
+        float wave(vec2 uv, float offset, vec2 screenUv, vec2 mouseUv) {
+            float time = iTime * animationSpeed;
+            float amp = sin(offset + time * 0.2) * 0.3;
+            float y = sin(uv.x + offset + time * 0.1) * amp;
+            
+            // Interactividad del ratón
+            vec2 d = screenUv - mouseUv;
+            float influence = exp(-dot(d, d) * 8.0); 
+            y += (mouseUv.y - screenUv.y) * influence * -2.0 * bendInfluence;
+
+            float m = uv.y - y;
+            return 0.0175 / max(abs(m) + 0.01, 1e-3) + 0.01;
+        }
+
+        void mainImage(out vec4 fragColor, in vec2 fragCoord) {
+            vec2 baseUv = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+            baseUv.y *= -1.0;
+            vec3 col = vec3(0.0);
+            
+            vec2 mouseUv = (2.0 * iMouse - iResolution.xy) / iResolution.y;
+            mouseUv.y *= -1.0;
+
+            // Capa Top
+            for (int i = 0; i < 8; ++i) {
+                float fi = float(i);
+                float t = fi / 7.0;
+                float angle = -0.4 * log(length(baseUv) + 1.0);
+                vec2 ruv = baseUv * rotate(angle);
+                ruv.x *= -1.0;
+                col += getLineColor(t) * wave(ruv + vec2(0.08 * fi + 10.0, 0.5), 1.0 + 0.2 * fi, baseUv, mouseUv) * 0.1;
+            }
+
+            // Capa Middle
+            for (int i = 0; i < 8; ++i) {
+                float fi = float(i);
+                float t = fi / 7.0;
+                float angle = 0.2 * log(length(baseUv) + 1.0);
+                vec2 ruv = baseUv * rotate(angle);
+                col += getLineColor(t) * wave(ruv + vec2(0.08 * fi + 5.0, 0.0), 2.0 + 0.15 * fi, baseUv, mouseUv);
+            }
+
+            // Capa Bottom
+            for (int i = 0; i < 8; ++i) {
+                float fi = float(i);
+                float t = fi / 7.0;
+                float angle = 0.4 * log(length(baseUv) + 1.0);
+                vec2 ruv = baseUv * rotate(angle);
+                col += getLineColor(t) * wave(ruv + vec2(0.08 * fi + 2.0, -0.7), 1.5 + 0.2 * fi, baseUv, mouseUv) * 0.2;
+            }
+
+            fragColor = vec4(col, 1.0);
+        }
+
+        void main() { mainImage(gl_FragColor, gl_FragCoord.xy); }
+        `;
+
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        camera.position.z = 1;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        container.appendChild(renderer.domElement);
+
+        const uniforms = {
+            iTime: { value: 0 },
+            iResolution: { value: new THREE.Vector3(1, 1, 1) },
+            animationSpeed: { value: 1.0 },
+            iMouse: { value: new THREE.Vector2(-1000, -1000) },
+            bendInfluence: { value: 0 }
+        };
+
+        const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, blending: THREE.AdditiveBlending });
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(mesh);
+
+        function resize() {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            uniforms.iResolution.value.set(renderer.domElement.width, renderer.domElement.height, 1);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Interactividad del mouse
+        let targetMouse = new THREE.Vector2(-1000, -1000);
+        let currentMouse = new THREE.Vector2(-1000, -1000);
+        let targetInfluence = 0;
+        let currentInfluence = 0;
+
+        document.addEventListener('pointermove', e => {
+            targetMouse.set(e.clientX * renderer.getPixelRatio(), (window.innerHeight - e.clientY) * renderer.getPixelRatio());
+            targetInfluence = 1.0;
+        });
+        document.addEventListener('pointerleave', () => targetInfluence = 0.0);
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            uniforms.iTime.value = clock.getElapsedTime();
+            
+            // Suavizado del mouse
+            currentMouse.lerp(targetMouse, 0.05);
+            uniforms.iMouse.value.copy(currentMouse);
+            currentInfluence += (targetInfluence - currentInfluence) * 0.05;
+            uniforms.bendInfluence.value = currentInfluence;
+
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

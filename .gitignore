@@ -1,0 +1,29 @@
+# ================================================
+# TUTOR-IA — Archivos ignorados por Git
+# ================================================
+
+# Variables de entorno (claves secretas)
+.env
+
+# Base de datos (datos de alumnos)
+tutor.db
+*.db
+
+# Caché de Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Entorno virtual de Python
+venv/
+env/
+.venv/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+.vscode/

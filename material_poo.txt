@@ -1,0 +1,928 @@
+================================================================
+MATERIAL DE PROGRAMACIÓN ORIENTADA A OBJETOS (POO)
+Tecnológico Superior de Jalisco — Ingeniería en Sistemas
+Nivel: Primer y Segundo año universitario
+================================================================
+
+================================================================
+MÓDULO 1: FUNDAMENTOS DE POO
+================================================================
+
+----------------------------------------
+1.1 ¿QUÉ ES LA POO?
+----------------------------------------
+La Programación Orientada a Objetos (POO) es un paradigma de programación
+que organiza el software en torno a "objetos" en lugar de funciones y lógica.
+Un objeto combina DATOS (atributos) y COMPORTAMIENTO (métodos) en una sola
+unidad.
+
+Ventajas principales:
+- Código más organizado y fácil de entender
+- Reutilización de código mediante herencia
+- Facilita el mantenimiento y modificación
+- Modela mejor la realidad (un Auto, un Usuario, un Producto)
+- Permite trabajar en equipo dividiendo responsabilidades por clases
+
+Comparación con programación estructurada:
+- Estructurada: el programa es una serie de instrucciones y funciones
+- POO: el programa es una colección de objetos que se comunican entre sí
+
+----------------------------------------
+1.2 CLASES
+----------------------------------------
+Una CLASE es una plantilla o molde para crear objetos.
+Define QUÉ atributos tendrá el objeto y QUÉ acciones podrá realizar.
+
+Sintaxis en Java:
+public class NombreClase {
+    // atributos
+    // constructores
+    // métodos
+}
+
+Ejemplo básico:
+public class Perro {
+    String nombre;
+    String raza;
+    int edad;
+
+    void ladrar() {
+        System.out.println(nombre + " dice: ¡Guau!");
+    }
+}
+
+Reglas para nombrar clases:
+- Siempre empiezan con MAYÚSCULA
+- Usar PascalCase: MiClase, CuentaBancaria, EstudianteUniversidad
+- El nombre del archivo .java debe ser igual al nombre de la clase pública
+
+----------------------------------------
+1.3 OBJETOS
+----------------------------------------
+Un OBJETO es una INSTANCIA de una clase. Es la realización concreta del molde.
+Para crear un objeto se usa la palabra reservada "new".
+
+Sintaxis:
+NombreClase nombreObjeto = new NombreClase();
+
+Ejemplo:
+Perro miPerro = new Perro();
+miPerro.nombre = "Rex";
+miPerro.raza   = "Labrador";
+miPerro.edad   = 3;
+miPerro.ladrar(); // Imprime: Rex dice: ¡Guau!
+
+// Se pueden crear múltiples objetos del mismo molde
+Perro otroPerro = new Perro();
+otroPerro.nombre = "Firulais";
+
+Diferencia clave:
+- CLASE = el plano arquitectónico de una casa
+- OBJETO = la casa construida a partir de ese plano
+Puedes construir muchas casas del mismo plano, cada una es un objeto distinto.
+
+----------------------------------------
+1.4 ATRIBUTOS
+----------------------------------------
+Los ATRIBUTOS (también llamados campos o variables de instancia) son las
+características o propiedades que describe un objeto.
+
+Tipos de atributos:
+- De instancia: cada objeto tiene su propio valor
+- De clase (static): compartido por todos los objetos de esa clase
+
+Ejemplo:
+public class Estudiante {
+    // Atributos de instancia
+    String nombre;
+    int edad;
+    double promedio;
+
+    // Atributo de clase
+    static String universidad = "Tecnológico Superior de Jalisco";
+}
+
+Buena práctica: declarar los atributos como PRIVATE (encapsulamiento)
+y acceder a ellos mediante getters y setters.
+
+----------------------------------------
+1.5 MÉTODOS
+----------------------------------------
+Los MÉTODOS son las acciones o comportamientos que puede realizar un objeto.
+Son funciones definidas dentro de una clase.
+
+Estructura de un método:
+modificadorAcceso tipoRetorno nombreMetodo(parametros) {
+    // cuerpo del método
+    return valor; // si no es void
+}
+
+Tipos de métodos según retorno:
+- void: no devuelve ningún valor
+- int, double, String, etc.: devuelve un valor de ese tipo
+
+Ejemplo completo:
+public class Calculadora {
+
+    // Método que devuelve un entero
+    public int sumar(int a, int b) {
+        return a + b;
+    }
+
+    // Método void (no devuelve nada)
+    public void mostrarResultado(int resultado) {
+        System.out.println("El resultado es: " + resultado);
+    }
+
+    // Método que devuelve un double
+    public double dividir(double a, double b) {
+        if (b == 0) {
+            System.out.println("Error: no se puede dividir entre cero");
+            return 0;
+        }
+        return a / b;
+    }
+}
+
+// Uso:
+Calculadora calc = new Calculadora();
+int suma = calc.sumar(5, 3);       // suma = 8
+calc.mostrarResultado(suma);        // Imprime: El resultado es: 8
+
+================================================================
+MÓDULO 2: CONSTRUCTORES
+================================================================
+
+----------------------------------------
+2.1 ¿QUÉ ES UN CONSTRUCTOR?
+----------------------------------------
+Un CONSTRUCTOR es un método especial que se ejecuta AUTOMÁTICAMENTE
+cuando se crea un objeto con "new". Su función es INICIALIZAR los atributos.
+
+Características:
+- Tiene el MISMO NOMBRE que la clase
+- NO tiene tipo de retorno (ni void)
+- Se puede sobrecargar (tener varios constructores)
+- Si no defines uno, Java crea uno vacío automáticamente
+
+----------------------------------------
+2.2 TIPOS DE CONSTRUCTORES
+----------------------------------------
+
+Constructor por defecto (sin parámetros):
+public class Coche {
+    String marca;
+    String color;
+    int año;
+
+    // Constructor por defecto
+    public Coche() {
+        marca = "Desconocida";
+        color = "Blanco";
+        año   = 2024;
+    }
+}
+
+Constructor con parámetros:
+public class Coche {
+    String marca;
+    String color;
+    int año;
+
+    // Constructor con parámetros
+    public Coche(String marca, String color, int año) {
+        this.marca = marca;  // "this" se refiere al atributo del objeto
+        this.color = color;
+        this.año   = año;
+    }
+}
+
+Sobrecarga de constructores (tener ambos):
+public class Coche {
+    String marca;
+    String color;
+    int año;
+
+    // Constructor 1: sin parámetros
+    public Coche() {
+        this.marca = "Sin marca";
+        this.color = "Blanco";
+        this.año   = 2024;
+    }
+
+    // Constructor 2: con parámetros
+    public Coche(String marca, String color, int año) {
+        this.marca = marca;
+        this.color = color;
+        this.año   = año;
+    }
+}
+
+// Uso de ambos constructores:
+Coche c1 = new Coche();                          // usa constructor 1
+Coche c2 = new Coche("Toyota", "Rojo", 2023);    // usa constructor 2
+
+----------------------------------------
+2.3 LA PALABRA RESERVADA "this"
+----------------------------------------
+"this" hace referencia al objeto ACTUAL que está ejecutando el método.
+Se usa cuando el nombre del parámetro es igual al nombre del atributo.
+
+Sin this (puede causar confusión):
+public Persona(String nombre) {
+    nombre = nombre; // ERROR: se asigna el parámetro a sí mismo
+}
+
+Con this (correcto):
+public Persona(String nombre) {
+    this.nombre = nombre; // this.nombre = atributo, nombre = parámetro
+}
+
+================================================================
+MÓDULO 3: ENCAPSULAMIENTO
+================================================================
+
+----------------------------------------
+3.1 ¿QUÉ ES EL ENCAPSULAMIENTO?
+----------------------------------------
+El ENCAPSULAMIENTO es el principio de ocultar los datos internos de un objeto
+y solo permitir el acceso a ellos mediante métodos controlados (getters y setters).
+
+Analogía: Es como un control remoto de TV. No necesitas saber cómo funciona
+por dentro, solo necesitas saber qué botones presionar.
+
+----------------------------------------
+3.2 MODIFICADORES DE ACCESO
+----------------------------------------
+- public:    accesible desde cualquier clase
+- private:   solo accesible dentro de la misma clase
+- protected: accesible dentro del mismo paquete y subclases
+- (default): accesible solo dentro del mismo paquete
+
+Buena práctica: los atributos deben ser PRIVATE y los métodos PUBLIC.
+
+----------------------------------------
+3.3 GETTERS Y SETTERS
+----------------------------------------
+- GETTER: método que DEVUELVE el valor de un atributo privado
+- SETTER: método que MODIFICA el valor de un atributo privado
+
+Convención de nombres:
+- Getter: getNombreAtributo()
+- Setter: setNombreAtributo(valor)
+
+Ejemplo completo con encapsulamiento:
+public class CuentaBancaria {
+
+    private String titular;
+    private double saldo;
+    private String numeroCuenta;
+
+    public CuentaBancaria(String titular, String numeroCuenta) {
+        this.titular      = titular;
+        this.numeroCuenta = numeroCuenta;
+        this.saldo        = 0.0;
+    }
+
+    // GETTER para titular
+    public String getTitular() {
+        return titular;
+    }
+
+    // SETTER para titular (con validación)
+    public void setTitular(String titular) {
+        if (titular != null && !titular.isEmpty()) {
+            this.titular = titular;
+        } else {
+            System.out.println("Error: el nombre no puede estar vacío");
+        }
+    }
+
+    // GETTER para saldo
+    public double getSaldo() {
+        return saldo;
+    }
+
+    // No hay setter para saldo, se controla con métodos específicos
+    public void depositar(double cantidad) {
+        if (cantidad > 0) {
+            saldo += cantidad;
+            System.out.println("Depósito exitoso. Saldo: " + saldo);
+        } else {
+            System.out.println("La cantidad debe ser positiva");
+        }
+    }
+
+    public void retirar(double cantidad) {
+        if (cantidad > 0 && cantidad <= saldo) {
+            saldo -= cantidad;
+            System.out.println("Retiro exitoso. Saldo: " + saldo);
+        } else {
+            System.out.println("Fondos insuficientes o cantidad inválida");
+        }
+    }
+
+    // GETTER para numeroCuenta
+    public String getNumeroCuenta() {
+        return numeroCuenta;
+    }
+}
+
+// Uso:
+CuentaBancaria cuenta = new CuentaBancaria("Daniel", "1234-5678");
+cuenta.depositar(1000);
+cuenta.retirar(500);
+System.out.println("Saldo: " + cuenta.getSaldo()); // 500.0
+// cuenta.saldo = 999999; // ERROR: saldo es private, no se puede acceder directo
+
+================================================================
+MÓDULO 4: HERENCIA
+================================================================
+
+----------------------------------------
+4.1 ¿QUÉ ES LA HERENCIA?
+----------------------------------------
+La HERENCIA permite que una clase (hija/subclase) adquiera los atributos
+y métodos de otra clase (padre/superclase). Representa una relación "ES UN".
+
+Ejemplo de relación:
+- Un Perro ES UN Animal
+- Un Estudiante ES UNA Persona
+- Un Auto ES UN Vehiculo
+
+Ventaja: evitar repetir código. Los atributos comunes se definen una sola vez
+en la clase padre.
+
+Sintaxis en Java:
+public class ClaseHija extends ClasePadre {
+    // atributos y métodos adicionales
+}
+
+----------------------------------------
+4.2 EJEMPLO COMPLETO DE HERENCIA
+----------------------------------------
+
+Clase padre:
+public class Animal {
+    private String nombre;
+    private int edad;
+
+    public Animal(String nombre, int edad) {
+        this.nombre = nombre;
+        this.edad   = edad;
+    }
+
+    public String getNombre() { return nombre; }
+    public int getEdad()      { return edad; }
+
+    public void comer() {
+        System.out.println(nombre + " está comiendo");
+    }
+
+    public void dormir() {
+        System.out.println(nombre + " está durmiendo");
+    }
+}
+
+Clase hija Perro:
+public class Perro extends Animal {
+    private String raza;
+
+    // Constructor: llama al constructor del padre con "super"
+    public Perro(String nombre, int edad, String raza) {
+        super(nombre, edad); // inicializa los atributos del padre
+        this.raza = raza;
+    }
+
+    public String getRaza() { return raza; }
+
+    // Método propio de Perro (no existe en Animal)
+    public void ladrar() {
+        System.out.println(getNombre() + " dice: ¡Guau!");
+    }
+}
+
+Clase hija Gato:
+public class Gato extends Animal {
+    private boolean esIndoor;
+
+    public Gato(String nombre, int edad, boolean esIndoor) {
+        super(nombre, edad);
+        this.esIndoor = esIndoor;
+    }
+
+    public void maullar() {
+        System.out.println(getNombre() + " dice: ¡Miau!");
+    }
+}
+
+// Uso:
+Perro p = new Perro("Rex", 3, "Labrador");
+p.comer();   // heredado de Animal → Rex está comiendo
+p.ladrar();  // propio de Perro  → Rex dice: ¡Guau!
+
+Gato g = new Gato("Michi", 2, true);
+g.dormir();  // heredado de Animal
+g.maullar(); // propio de Gato
+
+----------------------------------------
+4.3 LA PALABRA RESERVADA "super"
+----------------------------------------
+"super" se usa para:
+1. Llamar al constructor del padre: super(parametros)
+2. Llamar a un método del padre: super.metodo()
+
+Regla importante: la llamada a super() DEBE ser la primera línea
+del constructor hijo.
+
+----------------------------------------
+4.4 SOBREESCRITURA DE MÉTODOS (@Override)
+----------------------------------------
+Una clase hija puede RE-DEFINIR un método del padre para cambiar su comportamiento.
+
+public class Animal {
+    public void hacerSonido() {
+        System.out.println("El animal hace un sonido");
+    }
+}
+
+public class Perro extends Animal {
+    @Override
+    public void hacerSonido() {
+        System.out.println("El perro dice: ¡Guau!");
+    }
+}
+
+public class Gato extends Animal {
+    @Override
+    public void hacerSonido() {
+        System.out.println("El gato dice: ¡Miau!");
+    }
+}
+
+// Uso:
+Animal a = new Animal();
+a.hacerSonido(); // El animal hace un sonido
+
+Perro p = new Perro();
+p.hacerSonido(); // El perro dice: ¡Guau!  (método sobreescrito)
+
+================================================================
+MÓDULO 5: POLIMORFISMO
+================================================================
+
+----------------------------------------
+5.1 ¿QUÉ ES EL POLIMORFISMO?
+----------------------------------------
+POLIMORFISMO significa "muchas formas". Permite que objetos de diferentes
+clases sean tratados como objetos de una clase común (su padre).
+Un mismo método puede comportarse diferente según el objeto que lo ejecute.
+
+Tipos:
+1. Polimorfismo de sobreescritura (en tiempo de ejecución)
+2. Polimorfismo de sobrecarga (en tiempo de compilación)
+
+----------------------------------------
+5.2 POLIMORFISMO POR SOBREESCRITURA
+----------------------------------------
+public class Figura {
+    public double calcularArea() {
+        return 0;
+    }
+}
+
+public class Circulo extends Figura {
+    private double radio;
+
+    public Circulo(double radio) {
+        this.radio = radio;
+    }
+
+    @Override
+    public double calcularArea() {
+        return Math.PI * radio * radio;
+    }
+}
+
+public class Rectangulo extends Figura {
+    private double base;
+    private double altura;
+
+    public Rectangulo(double base, double altura) {
+        this.base   = base;
+        this.altura = altura;
+    }
+
+    @Override
+    public double calcularArea() {
+        return base * altura;
+    }
+}
+
+public class Triangulo extends Figura {
+    private double base;
+    private double altura;
+
+    public Triangulo(double base, double altura) {
+        this.base   = base;
+        this.altura = altura;
+    }
+
+    @Override
+    public double calcularArea() {
+        return (base * altura) / 2;
+    }
+}
+
+// Polimorfismo en acción:
+Figura[] figuras = {
+    new Circulo(5),
+    new Rectangulo(4, 6),
+    new Triangulo(3, 8)
+};
+
+for (Figura f : figuras) {
+    // El mismo método calcularArea() se comporta diferente
+    // según el tipo real del objeto
+    System.out.println("Área: " + f.calcularArea());
+}
+// Área: 78.53...
+// Área: 24.0
+// Área: 12.0
+
+----------------------------------------
+5.3 SOBRECARGA DE MÉTODOS
+----------------------------------------
+La SOBRECARGA permite tener varios métodos con el MISMO NOMBRE
+pero diferentes parámetros (distinto número o tipo).
+
+public class Impresora {
+
+    // Método 1: imprime un entero
+    public void imprimir(int numero) {
+        System.out.println("Número: " + numero);
+    }
+
+    // Método 2: imprime un String
+    public void imprimir(String texto) {
+        System.out.println("Texto: " + texto);
+    }
+
+    // Método 3: imprime dos enteros
+    public void imprimir(int a, int b) {
+        System.out.println("Dos números: " + a + " y " + b);
+    }
+}
+
+// Java decide cuál usar según los argumentos:
+Impresora imp = new Impresora();
+imp.imprimir(42);           // usa Método 1
+imp.imprimir("Hola");       // usa Método 2
+imp.imprimir(10, 20);       // usa Método 3
+
+================================================================
+MÓDULO 6: ABSTRACCIÓN
+================================================================
+
+----------------------------------------
+6.1 CLASES ABSTRACTAS
+----------------------------------------
+Una CLASE ABSTRACTA es una clase que NO puede ser instanciada directamente
+(no puedes crear objetos de ella con "new"). Su propósito es servir de
+BASE para otras clases.
+
+Puede tener:
+- Métodos abstractos (sin implementación, solo la firma)
+- Métodos concretos (con implementación)
+
+Sintaxis:
+public abstract class NombreClase {
+    public abstract void metodoAbstracto(); // sin cuerpo
+    public void metodoConcreto() {          // con cuerpo
+        // implementación
+    }
+}
+
+Ejemplo:
+public abstract class Empleado {
+    private String nombre;
+    private double salarioBase;
+
+    public Empleado(String nombre, double salarioBase) {
+        this.nombre      = nombre;
+        this.salarioBase = salarioBase;
+    }
+
+    public String getNombre()      { return nombre; }
+    public double getSalarioBase() { return salarioBase; }
+
+    // Método abstracto: cada tipo de empleado lo calcula diferente
+    public abstract double calcularSalario();
+
+    // Método concreto: igual para todos
+    public void mostrarInfo() {
+        System.out.println("Empleado: " + nombre);
+        System.out.println("Salario:  " + calcularSalario());
+    }
+}
+
+public class EmpleadoFijo extends Empleado {
+    public EmpleadoFijo(String nombre, double salario) {
+        super(nombre, salario);
+    }
+
+    @Override
+    public double calcularSalario() {
+        return getSalarioBase(); // salario fijo
+    }
+}
+
+public class EmpleadoComision extends Empleado {
+    private double comision;
+
+    public EmpleadoComision(String nombre, double salarioBase, double comision) {
+        super(nombre, salarioBase);
+        this.comision = comision;
+    }
+
+    @Override
+    public double calcularSalario() {
+        return getSalarioBase() + comision;
+    }
+}
+
+// Uso:
+EmpleadoFijo e1 = new EmpleadoFijo("Daniel", 8000);
+e1.mostrarInfo();
+// Empleado: Daniel
+// Salario: 8000.0
+
+EmpleadoComision e2 = new EmpleadoComision("Fernando", 5000, 3500);
+e2.mostrarInfo();
+// Empleado: Fernando
+// Salario: 8500.0
+
+----------------------------------------
+6.2 INTERFACES
+----------------------------------------
+Una INTERFAZ es un contrato que define QUÉ debe hacer una clase,
+pero NO CÓMO debe hacerlo. Es como una lista de métodos que la clase
+está obligada a implementar.
+
+Diferencias con clase abstracta:
+- Una clase puede implementar MÚLTIPLES interfaces
+- Una clase solo puede HEREDAR de una clase
+- Las interfaces no tienen atributos de instancia (solo constantes)
+
+Sintaxis:
+public interface NombreInterface {
+    void metodo1();
+    int metodo2(String param);
+}
+
+Ejemplo:
+public interface Volador {
+    void volar();
+    void aterrizar();
+}
+
+public interface Nadador {
+    void nadar();
+}
+
+public class Pato implements Volador, Nadador {
+    private String nombre;
+
+    public Pato(String nombre) {
+        this.nombre = nombre;
+    }
+
+    @Override
+    public void volar() {
+        System.out.println(nombre + " está volando");
+    }
+
+    @Override
+    public void aterrizar() {
+        System.out.println(nombre + " aterrizó");
+    }
+
+    @Override
+    public void nadar() {
+        System.out.println(nombre + " está nadando");
+    }
+}
+
+================================================================
+MÓDULO 7: ERRORES COMUNES Y CÓMO CORREGIRLOS
+================================================================
+
+----------------------------------------
+ERROR 1: NullPointerException
+----------------------------------------
+Ocurre cuando intentas usar un objeto que no ha sido inicializado (es null).
+
+INCORRECTO:
+String nombre;                          // nombre = null
+System.out.println(nombre.length());    // NullPointerException!
+
+CORRECTO:
+String nombre = "Daniel";              // inicializado
+System.out.println(nombre.length());   // funciona
+
+También ocurre con objetos:
+Perro p;                    // p = null
+p.ladrar();                 // NullPointerException!
+
+// Correcto:
+Perro p = new Perro("Rex", 3, "Labrador");
+p.ladrar();                 // funciona
+
+----------------------------------------
+ERROR 2: Confundir clase con objeto
+----------------------------------------
+INCORRECTO:
+Coche.marca = "Toyota";         // ERROR: marca es de instancia
+
+CORRECTO:
+Coche miCoche = new Coche();
+miCoche.marca = "Toyota";       // correcto: acceder por el objeto
+
+----------------------------------------
+ERROR 3: Olvidar llamar a super() en el constructor hijo
+----------------------------------------
+INCORRECTO:
+public class Perro extends Animal {
+    public Perro(String nombre, int edad, String raza) {
+        // falta super(nombre, edad)
+        this.raza = raza;
+    }
+}
+
+CORRECTO:
+public class Perro extends Animal {
+    public Perro(String nombre, int edad, String raza) {
+        super(nombre, edad);  // siempre primera línea
+        this.raza = raza;
+    }
+}
+
+----------------------------------------
+ERROR 4: No usar "this" cuando hay ambigüedad
+----------------------------------------
+INCORRECTO:
+public class Persona {
+    String nombre;
+
+    public Persona(String nombre) {
+        nombre = nombre;   // se asigna a sí mismo, no funciona
+    }
+}
+
+CORRECTO:
+public class Persona {
+    String nombre;
+
+    public Persona(String nombre) {
+        this.nombre = nombre;  // this.nombre = atributo
+    }
+}
+
+----------------------------------------
+ERROR 5: Intentar instanciar una clase abstracta
+----------------------------------------
+INCORRECTO:
+Empleado e = new Empleado("Daniel", 8000);  // ERROR: es abstracta
+
+CORRECTO:
+Empleado e = new EmpleadoFijo("Daniel", 8000);  // clase concreta
+
+----------------------------------------
+ERROR 6: No respetar el modificador de acceso private
+----------------------------------------
+INCORRECTO:
+public class Banco {
+    private double saldo = 1000;
+}
+
+Banco b = new Banco();
+b.saldo = 999999;   // ERROR: saldo es private
+
+CORRECTO:
+b.depositar(999);   // usar el método público
+
+----------------------------------------
+ERROR 7: Confundir == con .equals() para Strings
+----------------------------------------
+INCORRECTO:
+String a = "Hola";
+String b = "Hola";
+if (a == b) { ... }         // compara referencias, no contenido
+
+CORRECTO:
+if (a.equals(b)) { ... }    // compara el contenido del String
+
+================================================================
+MÓDULO 8: EJERCICIOS TIPO PARA PRÁCTICA
+================================================================
+
+----------------------------------------
+EJERCICIO 1: Clase básica (Nivel fácil)
+----------------------------------------
+Crear una clase "Rectangulo" con:
+- Atributos: base y altura (double)
+- Constructor con parámetros
+- Métodos: calcularArea(), calcularPerimetro(), mostrarInfo()
+
+Solución:
+public class Rectangulo {
+    private double base;
+    private double altura;
+
+    public Rectangulo(double base, double altura) {
+        this.base   = base;
+        this.altura = altura;
+    }
+
+    public double calcularArea() {
+        return base * altura;
+    }
+
+    public double calcularPerimetro() {
+        return 2 * (base + altura);
+    }
+
+    public void mostrarInfo() {
+        System.out.println("Base: " + base);
+        System.out.println("Altura: " + altura);
+        System.out.println("Área: " + calcularArea());
+        System.out.println("Perímetro: " + calcularPerimetro());
+    }
+}
+
+----------------------------------------
+EJERCICIO 2: Herencia (Nivel medio)
+----------------------------------------
+Crear jerarquía:
+- Clase padre: Vehiculo (marca, velocidadMaxima, acelerar(), frenar())
+- Clase hija: Moto (numRuedas=2, hacerCaballito())
+- Clase hija: Camion (capacidadCarga, cargar())
+
+----------------------------------------
+EJERCICIO 3: Encapsulamiento (Nivel medio)
+----------------------------------------
+Crear clase "Estudiante" con:
+- Atributos privados: nombre, matricula, promedio
+- Constructor completo
+- Getters y setters con validaciones:
+  * promedio debe estar entre 0 y 100
+  * nombre no puede ser vacío o null
+- Método: mostrarBoleta()
+
+----------------------------------------
+EJERCICIO 4: Polimorfismo (Nivel avanzado)
+----------------------------------------
+Crear clase abstracta "Instrumento" con método abstracto "tocar()"
+Subclases: Guitarra, Piano, Bateria
+Cada una sobreescribe tocar() con su sonido
+Crear un arreglo de Instrumento[] y recorrerlo llamando tocar() en cada uno
+
+================================================================
+MÓDULO 9: CONCEPTOS CLAVE PARA RECORDAR
+================================================================
+
+Pilares de la POO:
+1. ENCAPSULAMIENTO: ocultar datos y controlar el acceso
+2. HERENCIA: reutilizar código mediante relaciones padre-hijo
+3. POLIMORFISMO: un mismo método, comportamientos diferentes
+4. ABSTRACCIÓN: modelar solo lo esencial, ignorar lo irrelevante
+
+Palabras reservadas importantes en Java:
+- class:     define una clase
+- extends:   herencia (una clase hereda de otra)
+- implements: implementar una interfaz
+- abstract:  clase o método abstracto
+- interface: define una interfaz
+- this:      referencia al objeto actual
+- super:     referencia a la clase padre
+- new:       crear un nuevo objeto
+- public:    accesible desde cualquier clase
+- private:   solo accesible en la misma clase
+- protected: accesible en la misma clase y subclases
+- static:    pertenece a la clase, no al objeto
+- final:     constante / no puede ser sobreescrita / no puede ser heredada
+- void:      el método no devuelve ningún valor
+- return:    devuelve un valor desde el método
+- null:      referencia vacía (objeto no inicializado)
+
+Reglas de oro:
+- Un archivo .java = una clase pública (mismo nombre)
+- Los atributos deben ser PRIVATE siempre
+- Usa constructores para inicializar atributos
+- Llama a super() siempre en el constructor hijo
+- Usa @Override al sobreescribir métodos
+- Un objeto debe ser creado con "new" antes de usarlo
+
+================================================================
+FIN DEL MATERIAL
+================================================================

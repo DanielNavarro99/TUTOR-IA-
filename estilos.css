@@ -1,0 +1,104 @@
+/* Reseteo básico */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+body {
+    background-color: #e5ddd5; /* Color de fondo tipo WhatsApp */
+    display: flex;
+    justify_content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 600px; /* Ancho máximo para que parezca app móvil */
+    background: #fff;
+    height: 95vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Encabezado */
+.chat-header {
+    background: #075e54; /* Verde tecno/profesional */
+    color: white;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-header .title h1 { font-size: 16px; }
+.chat-header .title p { font-size: 12px; opacity: 0.8; }
+
+/* Caja de Chat */
+.chat-box {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto; /* Permite hacer scroll */
+    background: #e5ddd5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Burbujas de mensaje */
+.message {
+    max-width: 80%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+    position: relative;
+}
+
+.bot-message {
+    background: #fff;
+    align-self: flex-start; /* Alineado a la izquierda */
+    border-top-left-radius: 0;
+}
+
+.user-message {
+    background: #dcf8c6; /* Verde claro usuario */
+    align-self: flex-end; /* Alineado a la derecha */
+    border-top-right-radius: 0;
+}
+
+.time {
+    display: block;
+    font-size: 10px;
+    color: #999;
+    text-align: right;
+    margin-top: 5px;
+}
+
+/* Input */
+.input-area {
+    padding: 15px;
+    background: #f0f0f0;
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    outline: none;
+}
+
+button {
+    background: #075e54;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover { background: #128c7e; }

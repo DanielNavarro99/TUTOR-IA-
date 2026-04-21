@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Dashboard Tutor IA</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 40px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f4f4f4;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h1>Estadísticas del Tutor Inteligente</h1>
+
+    <canvas id="grafica" width="600" height="300"></canvas>
+
+    <h2>Historial de preguntas</h2>
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Pregunta</th>
+                <th>Tema</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+
+        <tbody id="tablaPreguntas"></tbody>
+
+    </table>
+
+    <script>
+
+        async function cargarDatos() {
+
+            const res = await fetch("http://127.0.0.1:5000/estadisticas")
+            const datos = await res.json()
+
+            const temas = datos.map(x => x.tema)
+            const cantidades = datos.map(x => x.cantidad)
+
+            const ctx = document.getElementById("grafica")
+
+            new Chart(ctx, {
+                type: "bar",
+
+                data: {
+                    labels: temas,
+
+                    datasets: [{
+                        label: "Número de preguntas",
+                        data: cantidades,
+
+                        backgroundColor: [
+                            "#4CAF50",
+                            "#2196F3",
+                            "#FFC107",
+                            "#E91E63",
+                            "#9C27B0"
+                        ],
+
+                        borderRadius: 10,
+                        barThickness: 60
+                    }]
+                },
+
+                options: {
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        title: {
+                            display: true,
+                            text: "Preguntas realizadas por tema"
+                        }
+                    },
+
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+
+                }
+
+            })
+
+        }
+
+        async function cargarTabla() {
+
+            const res = await fetch("http://127.0.0.1:5000/preguntas")
+            const datos = await res.json()
+
+            let tabla = document.getElementById("tablaPreguntas")
+
+            datos.forEach(p => {
+
+                let fila = `
+<tr>
+<td>${p.pregunta}</td>
+<td>${p.tema}</td>
+<td>${p.fecha}</td>
+</tr>
+`
+
+                tabla.innerHTML += fila
+
+            })
+
+        }
+
+        cargarDatos()
+        cargarTabla()
+
+    </script>
+
+</body>
+
+</html>
