@@ -1,48 +1,93 @@
-TUTOR-IA — Modelo Pedagógico Personalizado con LLMs
-Tecnológico Superior de Jalisco, Campus Chapala — Ingeniería en Sistemas Computacionales
+# Tutor-IA 🤖🎓
+**Tecnológico Superior de Jalisco, Campus Chapala — Ingeniería en Sistemas Computacionales**
 
-Un sistema de tutoría inteligente diseñado para la materia de Programación Orientada a Objetos (POO). Este sistema utiliza Grandes Modelos de Lenguaje (LLMs) para ofrecer un andamiaje pedagógico personalizado, guiando al alumno en lugar de proveer respuestas directas.
+Un sistema de tutoría inteligente diseñado para la materia de Programación Orientada a Objetos (POO). Utiliza Grandes Modelos de Lenguaje (LLMs) para ofrecer un andamiaje pedagógico personalizado, guiando al alumno en la Zona de Desarrollo Próximo (ZDP) en lugar de darle respuestas directas.
 
-Arquitectura del Sistema
-El proyecto sigue una sólida arquitectura cliente-servidor de tres capas:
+## Estructura del proyecto
 
-Capa de Presentación (Frontend): Interfaces HTML/CSS/JS accesibles desde el navegador. Incluye el chat interactivo, el panel de administración docente y el sistema de autenticación.
+```text
+tutor-ia/
+  app.py                      ← Backend Flask (API, Prompts, Lógica)
+  requirements.txt            ← Dependencias de Python
+  .env                        ← Variables seguras (API Keys - IGNORADO EN GIT)
+  database/
+    tutor.db                  ← Base de datos SQLite (alumnos e historial)
+  static/
+    css/
+      style.css               ← Interfaz de usuario
+    js/
+      chat.js                 ← Lógica del cliente, Markdown e Highlight.js
+      dashboard.js            ← Minería de datos y gráficas con Chart.js
+  templates/
+    index.html                ← Interfaz principal del chat
+    admin.html                ← Panel de administración docente
+```
 
-Capa de Lógica de Negocio (Backend): Servidor Flask en Python que gestiona la API REST, valida sesiones, construye los prompts pedagógicos y orquesta la comunicación con la IA.
+## Stack Tecnológico 🛠️
 
-Capa de Datos: Base de datos local que registra alumnos y el historial de interacciones para minería de datos.
+**Backend & IA**
+- Python 3.x con **Flask 3.0.3** y Flask-CORS
+- Base de datos: **SQLite 3.x**
+- IA: **Google Gemini API** (2.5 Flash) mediante `google-generativeai`
+- Producción: **Gunicorn 22.0.0**
 
-Stack Tecnológico
-Backend & IA
-Lenguaje: Python 3.x
+**Frontend**
+- HTML5, CSS3, JS (ES6+)
+- Visualización: **Chart.js 4.4.1**
+- Procesamiento: **Marked.js** (Markdown) y **Highlight.js** (Sintaxis)
+- Tipografías: *Plus Jakarta Sans* y *JetBrains Mono*
 
-Framework Web: Flask 3.0.3 y Flask-CORS 4.0.1
+## Instalación desde cero
 
-Base de Datos: SQLite 3.x
+### 1. Requisitos
+- Python 3.x instalado en el sistema
+- Una clave de API de Google Gemini Studio
 
-Inteligencia Artificial: Google Gemini API (Modelo 2.5 Flash) vía google-generativeai 0.8.3
+### 2. Setup del Entorno
+Clona el repositorio y configura el entorno virtual:
 
-Entorno de Producción: Gunicorn 22.0.0 y gestión de variables seguras con python-dotenv 1.0.1.
+```bash
+# Crear entorno virtual
+python -m venv venv
 
-Frontend
-Estructura y Estilos: HTML5, CSS3, JavaScript (ES6+)
+# Activar entorno (Windows)
+venv\Scripts\activate
+# Activar entorno (Linux/Mac)
+source venv/bin/activate
 
-Visualización de Datos: Chart.js 4.4.1
+# Instalar dependencias
+pip install -r requirements.txt
+```
 
-Procesamiento de Texto: Marked.js (Renderizado de Markdown) e Highlight.js 11.9.0 (Resaltado de sintaxis)
+### 3. Variables de Entorno (`.env`)
+Crea un archivo llamado `.env` en la raíz del proyecto (este archivo está protegido por el `.gitignore` para no filtrarse en GitHub). Formato:
 
-Tipografías: Plus Jakarta Sans y JetBrains Mono (Google Fonts)
+```env
+GEMINI_API_KEY="tu_clave_de_api_aqui"
+FLASK_ENV="development"
+```
 
-Infraestructura y Despliegue
-Servidor: VPS alojado en Neubox (México)
+### 4. Ejecutar localmente
+```bash
+python app.py
+# El servidor iniciará en http://localhost:5000
+```
 
-Sistema Operativo: Ubuntu 24 LTS
+## Infraestructura en Producción 🚀
+El despliegue está configurado para un **VPS en Neubox (México)** corriendo sobre **Ubuntu 24 LTS**, utilizando Gunicorn para levantar la aplicación Flask de forma estable.
 
-Control de Versiones: Git y GitHub
+## Funcionalidades
 
-👨‍💻 Autores y Asesoría
-Desarrolladores: Daniel Santos Navarro Mendoza, Fernando Raya Rodríguez
+- ✅ Andamiaje pedagógico (No da el código, te enseña a pensarlo)
+- ✅ Integración nativa con Gemini 2.5 Flash
+- ✅ Interfaz de chat accesible desde el navegador
+- ✅ Renderizado en tiempo real de Markdown y bloques de código
+- ✅ Base de datos local para rastrear el progreso de los alumnos
+- ✅ Panel de administración para docentes con métricas visuales (Chart.js)
+- ✅ Arquitectura segura separando credenciales con `python-dotenv`
 
-Asesora: Ing. Carmen Leticia Salcedo Quebedo
+## 👨‍💻 Autores y Asesoría
 
-Año: 2026
+- **Desarrollador:** Daniel Santos Navarro Mendoza
+- **Asesora:** Ing. Carmen Leticia Salcedo Quebedo
+- **Año:** 2026
